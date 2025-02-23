@@ -1,0 +1,160 @@
+# https://taskfile.dev
+
+version: "3"
+
+vars:
+  GO_MODULE: github.com/klauern/gopher-tower
+  GO_FILES: '$(find . -type f -name "*.go" -not -path "./frontend/*")'
+
+tasks:
+  default:
+    deps: [help]
+
+  help:
+    desc: Display available tasks
+    cmds:
+      - task --list
+    silent: true
+
+  # Frontend Tasks
+  frontend:install:
+    desc: Install frontend dependencies
+    dir: frontend
+    cmds:
+      - bun install
+    sources:
+      - frontend/package.json
+      - frontend/bun.lockb
+    generates:
+      - frontend/node_modules/**/*
+
+  frontend:dev:
+    desc: Start frontend development server
+    dir: frontend
+    cmds:
+      - bun dev
+    deps: [frontend:install]
+
+  frontend:build:
+    desc: Build frontend for production
+    dir: frontend
+    cmds:
+      - bun run build
+    deps: [frontend:install]
+
+  frontend:test:
+    desc: Run frontend tests
+    dir: frontend
+    cmds:
+      - bun test
+    deps: [frontend:install]
+
+  frontend:lint:
+    desc: Lint frontend code
+    dir: frontend
+    cmds:
+      - bun run lint
+    deps: [frontend:install]
+
+  # Go Tasks
+  go:deps:
+    desc: Download Go dependencies
+    cmds:
+      - go mod download
+      - go mod tidy
+    sources:
+      - go.mod
+      - go.sum
+
+  go:build:
+    desc: Build Go application
+    cmds:
+      - go build -v ./...
+    deps: [go:deps]
+    sources:
+      - "**/*.go"
+      - go.mod
+      - go.sum
+    generates:
+      - gopher-tower
+
+  go:test:
+    desc: Run Go tests
+    cmds:
+      - go test -v ./...
+    deps: [go:deps]
+
+  go:run:
+    desc: Run Go application
+    cmds:
+      - go run ./cmd/main.go
+    deps: [go:deps]
+
+  go:lint:
+    desc: Lint Go code
+    cmds:
+      - |
+        if ! command -v golangci-lint &> /dev/null; then
+          go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+        fi
+      - golangci-lint run
+    deps: [go:deps]
+
+  # Combined Tasks
+  dev:
+    desc: Start development environment (frontend + backend)
+    deps: [go:deps, frontend:install]
+    cmds:
+      - ./scripts/dev.sh
+
+  test:
+    desc: Run all tests
+    cmds:
+      - task: go:test
+      - task: frontend:test
+
+  lint:
+    desc: Lint all code
+    cmds:
+      - task: go:lint
+      - task: frontend:lint
+
+  build:
+    desc: Build everything
+    cmds:
+      - task: go:build
+      - task: frontend:build
+
+  # Docker Tasks
+  docker:build:
+    desc: Build all Docker images
+    cmds:
+      - docker-compose build
+
+  docker:up:
+    desc: Start all Docker containers
+    cmds:
+      - docker-compose up -d
+
+  docker:down:
+    desc: Stop all Docker containers
+    cmds:
+      - docker-compose down
+
+  docker:logs:
+    desc: Show logs from all containers
+    cmds:
+      - docker-compose logs -f
+
+  docker:rebuild:
+    desc: Rebuild and restart all containers
+    cmds:
+      - docker-compose down
+      - docker-compose build
+      - docker-compose up -d
+
+  docker:clean:
+    desc: Clean up Docker resources (containers, images)
+    cmds:
+      - docker-compose down --rmi local
+      - docker system prune -f
