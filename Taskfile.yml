@@ -54,7 +54,28 @@ tasks:
     desc: Run frontend tests
     dir: frontend
     cmds:
-      - bun test
+      - bun run test
+    deps: [frontend:install]
+
+  frontend:test:watch:
+    desc: Run frontend tests in watch mode
+    dir: frontend
+    cmds:
+      - bun run test:watch
+    deps: [frontend:install]
+
+  frontend:test:ui:
+    desc: Run frontend tests with UI
+    dir: frontend
+    cmds:
+      - bun run test:ui
+    deps: [frontend:install]
+
+  frontend:test:coverage:
+    desc: Run frontend tests with coverage report
+    dir: frontend
+    cmds:
+      - bun run test:coverage
     deps: [frontend:install]
 
   frontend:lint:
@@ -133,6 +154,18 @@ tasks:
     cmds:
       - task: go:test
       - task: frontend:test
+
+  test:watch:
+    desc: Run all tests in watch mode
+    cmds:
+      - task: go:test
+      - task: frontend:test:watch
+
+  test:coverage:
+    desc: Run all tests with coverage
+    cmds:
+      - task: go:test
+      - task: frontend:test:coverage
 
   lint:
     desc: Lint all code
