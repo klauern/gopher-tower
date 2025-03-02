@@ -1,7 +1,6 @@
 package main
 
 import (
-	"embed"
 	"encoding/json"
 	"fmt"
 	"io/fs"
@@ -9,10 +8,9 @@ import (
 	"net/http"
 	"strings"
 	"time"
-)
 
-//go:embed all:frontend-out
-var staticFiles embed.FS
+	"github.com/klauern/gopher-tower/internal/static"
+)
 
 type Event struct {
 	Type    string      `json:"type"`
@@ -20,8 +18,8 @@ type Event struct {
 }
 
 func main() {
-	// Create a file system with the frontend-out directory as the root
-	fsys, err := fs.Sub(staticFiles, "frontend-out")
+	// Create a file system with the frontend directory as the root
+	fsys, err := fs.Sub(static.Files, "frontend")
 	if err != nil {
 		log.Fatalf("Failed to create sub filesystem: %v", err)
 	}

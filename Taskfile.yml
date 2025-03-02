@@ -5,6 +5,7 @@ version: "3"
 vars:
   GO_MODULE: github.com/klauern/gopher-tower
   GO_FILES: '$(find . -type f -name "*.go" -not -path "./frontend/*")'
+  ROOT_DIR: "{{.TASKFILE_DIR}}"
 
 tasks:
   default:
@@ -15,6 +16,13 @@ tasks:
     cmds:
       - task --list
     silent: true
+
+  clean:
+    desc: Clean up build artifacts and temporary files
+    cmds:
+      - rm -rf gopher-tower gopher-tower-embedded
+      - rm -rf internal/static/frontend
+      - rm -rf frontend/.next frontend/out
 
   # Frontend Tasks
   frontend:install:
@@ -73,27 +81,11 @@ tasks:
       - go.mod
       - go.sum
 
-  go:fmt:
-    desc: Format Go code
-    cmds:
-      - go fmt ./...
-    deps: [go:deps]
-
-  go:prepare-embed:
-    desc: Prepare frontend files for embedding
-    deps: [frontend:build]
-    cmds:
-      - rm -rf cmd/frontend-out
-      - mkdir -p cmd/frontend-out
-      - cp -R frontend/out/* cmd/frontend-out/
-      - find cmd/frontend-out -type f -name "*.js" -exec chmod 644 {} \;
-      - find cmd/frontend-out -type f -name "*.css" -exec chmod 644 {} \;
-
   go:build:
     desc: Build Go application
     cmds:
       - go build -o gopher-tower ./cmd
-    deps: [go:deps, go:prepare-embed]
+    deps: [go:deps]
     sources:
       - "**/*.go"
       - go.mod
@@ -101,17 +93,23 @@ tasks:
     generates:
       - gopher-tower
 
+  go:dev:
+    desc: Run Go application in development mode
+    cmds:
+      - go run ./cmd/main.go
+    deps: [go:deps]
+
   go:test:
     desc: Run Go tests
     cmds:
       - go test -v ./...
     deps: [go:deps]
 
-  go:run:
-    desc: Run Go application
+  go:fmt:
+    desc: Format Go code
     cmds:
-      - go run ./cmd/main.go
-    deps: [go:deps, go:prepare-embed]
+      - go fmt ./...
+    deps: [go:deps]
 
   go:lint:
     desc: Lint Go code
@@ -149,22 +147,16 @@ tasks:
       - task: frontend:fmt
 
   build:
-    desc: Build everything
-    deps: [go:build]
+    desc: Build everything for production
     cmds:
+      - task: clean
+      - task: frontend:build
+      - |
+        # Prepare frontend files for embedding
+        mkdir -p internal/static/frontend
+        cp -r frontend/out/* internal/static/frontend/
+      - task: go:build
       - echo "Build completed successfully"
-
-  embedded:
-    desc: Build embedded app (frontend bundled in Go binary)
-    deps: [go:prepare-embed]
-    cmds:
-      - go build -o gopher-tower-embedded ./cmd
-
-  run:embedded:
-    desc: Run embedded application
-    deps: [embedded]
-    cmds:
-      - ./gopher-tower-embedded
 
   # Docker Tasks
   docker:build:
@@ -186,13 +178,6 @@ tasks:
     desc: Show logs from all containers
     cmds:
       - docker-compose logs -f
-
-  docker:rebuild:
-    desc: Rebuild and restart all containers
-    cmds:
-      - docker-compose down
-      - docker-compose build
-      - docker-compose up -d
 
   docker:clean:
     desc: Clean up Docker resources (containers, images)

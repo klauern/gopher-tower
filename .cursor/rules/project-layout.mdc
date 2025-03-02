@@ -1,6 +1,7 @@
 ---
 description: Project Layout
 globs: 
+alwaysApply: false
 ---
 - This is an application that uses both Golang and NextJS 15
 - `frontend/` is a NextJS 15 app with the following features:
@@ -11,4 +12,4 @@ globs:
   - Turbopack
   - Bun runtime for development
 - We use Taskfile.yml for common tasks.  New tasks will be added to it to document and outline what new common tasks we can use.
-- 
+- Use [CLAUDE.md](mdc:CLAUDE.md) to reference the project in more detail.
