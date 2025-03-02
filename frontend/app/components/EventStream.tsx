@@ -45,7 +45,7 @@ export function EventStream({
       cleanup();
 
       console.log('Attempting to connect to SSE endpoint:', url);
-      const eventSource = new EventSource(url);
+      const eventSource = new EventSource(url, { withCredentials: false });
       eventSourceRef.current = eventSource;
 
       eventSource.onopen = () => {

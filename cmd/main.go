@@ -1,13 +1,18 @@
 package main
 
 import (
+	"embed"
 	"encoding/json"
 	"fmt"
+	"io/fs"
 	"log"
 	"net/http"
 	"strings"
 	"time"
 )
+
+//go:embed all:frontend-out
+var staticFiles embed.FS
 
 type Event struct {
 	Type    string      `json:"type"`
@@ -15,9 +20,19 @@ type Event struct {
 }
 
 func main() {
+	// Create a file system with the frontend-out directory as the root
+	fsys, err := fs.Sub(staticFiles, "frontend-out")
+	if err != nil {
+		log.Fatalf("Failed to create sub filesystem: %v", err)
+	}
+
+	// Create a file server for static assets
+	fileServer := http.FileServer(http.FS(fsys))
+
+	// Initialize HTTP server and routes
 	mux := http.NewServeMux()
 
-	// Handle CORS preflight
+	// Handle SSE endpoint
 	mux.HandleFunc("/events", func(w http.ResponseWriter, r *http.Request) {
 		// Set CORS headers for all responses
 		w.Header().Set("Access-Control-Allow-Origin", "*")
@@ -39,17 +54,22 @@ func main() {
 		handleSSE(w, r)
 	})
 
+	// For everything else, use the file server
+	mux.Handle("/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		log.Printf("Request for: %s", r.URL.Path)
+		fileServer.ServeHTTP(w, r)
+	}))
+
 	port := 8080
 	server := &http.Server{
-		Addr:    fmt.Sprintf(":%d", port),
-		Handler: mux,
-		// Add timeouts to prevent connection issues
+		Addr:         fmt.Sprintf(":%d", port),
+		Handler:      mux,
 		ReadTimeout:  15 * time.Second,
 		WriteTimeout: 2 * time.Hour, // Long timeout for SSE
 		IdleTimeout:  60 * time.Second,
 	}
 
-	log.Printf("Starting SSE server on port %d...\n", port)
+	log.Printf("Starting server on port %d...\n", port)
 	log.Fatal(server.ListenAndServe())
 }
 

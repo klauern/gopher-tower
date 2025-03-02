@@ -56,6 +56,13 @@ tasks:
       - bun run lint
     deps: [frontend:install]
 
+  frontend:fmt:
+    desc: Format frontend code
+    dir: frontend
+    cmds:
+      - bunx next lint --fix
+    deps: [frontend:install]
+
   # Go Tasks
   go:deps:
     desc: Download Go dependencies
@@ -66,11 +73,27 @@ tasks:
       - go.mod
       - go.sum
 
+  go:fmt:
+    desc: Format Go code
+    cmds:
+      - go fmt ./...
+    deps: [go:deps]
+
+  go:prepare-embed:
+    desc: Prepare frontend files for embedding
+    deps: [frontend:build]
+    cmds:
+      - rm -rf cmd/frontend-out
+      - mkdir -p cmd/frontend-out
+      - cp -R frontend/out/* cmd/frontend-out/
+      - find cmd/frontend-out -type f -name "*.js" -exec chmod 644 {} \;
+      - find cmd/frontend-out -type f -name "*.css" -exec chmod 644 {} \;
+
   go:build:
     desc: Build Go application
     cmds:
-      - go build -v ./...
-    deps: [go:deps]
+      - go build -o gopher-tower ./cmd
+    deps: [go:deps, go:prepare-embed]
     sources:
       - "**/*.go"
       - go.mod
@@ -88,7 +111,7 @@ tasks:
     desc: Run Go application
     cmds:
       - go run ./cmd/main.go
-    deps: [go:deps]
+    deps: [go:deps, go:prepare-embed]
 
   go:lint:
     desc: Lint Go code
@@ -119,11 +142,29 @@ tasks:
       - task: go:lint
       - task: frontend:lint
 
+  fmt:
+    desc: Format all code
+    cmds:
+      - task: go:fmt
+      - task: frontend:fmt
+
   build:
     desc: Build everything
+    deps: [go:build]
     cmds:
-      - task: go:build
-      - task: frontend:build
+      - echo "Build completed successfully"
+
+  embedded:
+    desc: Build embedded app (frontend bundled in Go binary)
+    deps: [go:prepare-embed]
+    cmds:
+      - go build -o gopher-tower-embedded ./cmd
+
+  run:embedded:
+    desc: Run embedded application
+    deps: [embedded]
+    cmds:
+      - ./gopher-tower-embedded
 
   # Docker Tasks
   docker:build:

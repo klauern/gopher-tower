@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { EventStream, EventStreamData } from './components/EventStream';
+import { getApiUrl } from './config';
 
 export default function Home() {
   const [events, setEvents] = useState<Array<EventStreamData & { type: string }>>([]);
@@ -20,7 +21,7 @@ export default function Home() {
         <div className="px-4 py-6 sm:px-0">
           <div className="border-4 border-dashed border-gray-200 dark:border-gray-700 rounded-lg p-4">
             <EventStream
-              url="http://localhost:8080/events"
+              url={getApiUrl('events')}
               onMessage={(data) => {
                 console.log('Received event:', data);
                 setEvents(prev => [...prev, data as EventStreamData & { type: string }]);
