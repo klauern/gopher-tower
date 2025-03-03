@@ -187,15 +187,49 @@ tasks:
       - |
         # Prepare frontend files for embedding
         mkdir -p internal/static/frontend
-        cp -r frontend/out/* internal/static/frontend/
+        cp -r frontend/.next/static internal/static/frontend/
+        cp -r frontend/public/* internal/static/frontend/
       - task: go:build
       - echo "Build completed successfully"
 
   # Docker Tasks
+  docker:prepare:
+    desc: Prepare assets for Docker build
+    cmds:
+      - task: clean
+      - task: frontend:build
+      - |
+        # Prepare frontend files for embedding
+        mkdir -p internal/static/frontend
+        cp -r frontend/.next/static internal/static/frontend/
+        cp -r frontend/public/* internal/static/frontend/ || true
+      - echo "Docker build preparation completed"
+
   docker:build:
     desc: Build all Docker images
+    deps: [docker:prepare]
     cmds:
       - docker-compose build
+
+  docker:build:multiplatform:
+    desc: Build Docker images for multiple platforms (amd64, arm64)
+    deps: [docker:prepare]
+    cmds:
+      - |
+        echo "Building multi-platform Docker images..."
+        # Remove existing builder if it exists
+        docker buildx rm multiplatform-builder || true
+        # Create a new builder instance
+        docker buildx create --name multiplatform-builder --use
+        # Bootstrap the builder with multi-platform support
+        docker buildx inspect --bootstrap
+        # Build for multiple platforms
+        docker buildx build \
+          --platform linux/amd64,linux/arm64 \
+          --tag gopher-tower:latest \
+          --output type=image,push=false \
+          .
+        echo "Multi-platform build completed"
 
   docker:up:
     desc: Start all Docker containers
