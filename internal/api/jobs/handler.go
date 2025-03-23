@@ -8,6 +8,12 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
+// contextKey is a custom type for context keys to avoid collisions
+type contextKey string
+
+// UserIDKey is the context key for user ID
+const UserIDKey = contextKey("user_id")
+
 // Handler handles HTTP requests for jobs
 type Handler struct {
 	service Service
@@ -36,7 +42,7 @@ func (h *Handler) CreateJob(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get owner ID from context (assuming it's set by auth middleware)
-	ownerID := r.Context().Value("user_id")
+	ownerID := r.Context().Value(UserIDKey)
 	if ownerID == nil {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
@@ -54,7 +60,10 @@ func (h *Handler) CreateJob(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(resp)
+	if err := json.NewEncoder(w).Encode(resp); err != nil {
+		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+		return
+	}
 }
 
 // GetJob handles job retrieval requests
@@ -77,7 +86,10 @@ func (h *Handler) GetJob(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(resp)
+	if err := json.NewEncoder(w).Encode(resp); err != nil {
+		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+		return
+	}
 }
 
 // UpdateJob handles job update requests
@@ -108,7 +120,10 @@ func (h *Handler) UpdateJob(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(resp)
+	if err := json.NewEncoder(w).Encode(resp); err != nil {
+		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+		return
+	}
 }
 
 // DeleteJob handles job deletion requests
@@ -169,5 +184,8 @@ func (h *Handler) ListJobs(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(resp)
+	if err := json.NewEncoder(w).Encode(resp); err != nil {
+		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+		return
+	}
 }

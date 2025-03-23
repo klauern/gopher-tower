@@ -52,7 +52,7 @@ func TestCreateJob(t *testing.T) {
 				Status:      JobStatusPending,
 			},
 			setupAuth: func(r *http.Request) {
-				ctx := context.WithValue(r.Context(), "user_id", "test-user")
+				ctx := context.WithValue(r.Context(), UserIDKey, "test-user")
 				*r = *r.WithContext(ctx)
 			},
 			setupMock: func(ms *MockService) {
@@ -76,7 +76,7 @@ func TestCreateJob(t *testing.T) {
 				Status: JobStatusPending,
 			},
 			setupAuth: func(r *http.Request) {
-				ctx := context.WithValue(r.Context(), "user_id", "test-user")
+				ctx := context.WithValue(r.Context(), UserIDKey, "test-user")
 				*r = *r.WithContext(ctx)
 			},
 			setupMock: func(ms *MockService) {

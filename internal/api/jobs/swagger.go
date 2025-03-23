@@ -22,6 +22,8 @@ package jobs
 // @Failure 500 {string} string "Internal server error"
 // @Security BearerAuth
 // @Router /jobs [post]
+//
+//nolint:unused // This function exists only for swagger documentation
 func (h *Handler) swaggerCreateJob() {}
 
 // GetJob godoc
@@ -36,6 +38,8 @@ func (h *Handler) swaggerCreateJob() {}
 // @Failure 500 {string} string "Internal server error"
 // @Security BearerAuth
 // @Router /jobs/{id} [get]
+//
+//nolint:unused // This function exists only for swagger documentation
 func (h *Handler) swaggerGetJob() {}
 
 // UpdateJob godoc
@@ -52,6 +56,8 @@ func (h *Handler) swaggerGetJob() {}
 // @Failure 500 {string} string "Internal server error"
 // @Security BearerAuth
 // @Router /jobs/{id} [put]
+//
+//nolint:unused // This function exists only for swagger documentation
 func (h *Handler) swaggerUpdateJob() {}
 
 // DeleteJob godoc
@@ -66,6 +72,8 @@ func (h *Handler) swaggerUpdateJob() {}
 // @Failure 500 {string} string "Internal server error"
 // @Security BearerAuth
 // @Router /jobs/{id} [delete]
+//
+//nolint:unused // This function exists only for swagger documentation
 func (h *Handler) swaggerDeleteJob() {}
 
 // ListJobs godoc
@@ -82,4 +90,6 @@ func (h *Handler) swaggerDeleteJob() {}
 // @Failure 500 {string} string "Internal server error"
 // @Security BearerAuth
 // @Router /jobs [get]
+//
+//nolint:unused // This function exists only for swagger documentation
 func (h *Handler) swaggerListJobs() {}
