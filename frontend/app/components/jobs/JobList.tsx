@@ -1,5 +1,6 @@
 'use client';
 
+import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { JobListResponse, JobStatus } from '../../types/jobs';
 import { formatDate } from '../../utils/date';
@@ -13,6 +14,7 @@ interface JobListProps {
 }
 
 export function JobList({ status, page, pageSize, onPageChange }: JobListProps) {
+  const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [data, setData] = useState<JobListResponse | null>(null);
@@ -48,6 +50,10 @@ export function JobList({ status, page, pageSize, onPageChange }: JobListProps) 
 
     fetchJobs();
   }, [page, pageSize, status]);
+
+  const handleJobClick = (jobId: string) => {
+    router.push(`/jobs/detail?id=${jobId}`);
+  };
 
   if (loading) {
     return <div className="text-center py-4">Loading jobs...</div>;
@@ -88,7 +94,11 @@ export function JobList({ status, page, pageSize, onPageChange }: JobListProps) 
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
             {data.jobs.map((job) => (
-              <tr key={job.id} className="hover:bg-gray-50">
+              <tr
+                key={job.id}
+                className="hover:bg-gray-50 cursor-pointer transition-colors"
+                onClick={() => handleJobClick(job.id)}
+              >
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="text-sm font-medium text-gray-900">
                     {job.name}
