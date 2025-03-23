@@ -148,6 +148,12 @@ tasks:
       - golangci-lint run
     deps: [go:deps]
 
+  go:test:coverage:
+    desc: Run Go tests with coverage
+    deps: [go:deps, go:generate]
+    cmds:
+      - go test -v -race -coverprofile=coverage.out -covermode=atomic ./...
+
   # Combined Tasks
   dev:
     desc: Start development environment (frontend + backend)
@@ -170,7 +176,7 @@ tasks:
   test:coverage:
     desc: Run all tests with coverage
     cmds:
-      - task: go:test
+      - task: go:test:coverage
       - task: frontend:test:coverage
 
   lint:
