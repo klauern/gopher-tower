@@ -93,6 +93,12 @@ tasks:
     deps: [frontend:install]
 
   # Go Tasks
+  go:generate:
+    desc: Generate Go code (mocks, etc.)
+    deps: [go:deps]
+    cmds:
+      - go generate ./...
+
   go:deps:
     desc: Download Go dependencies
     cmds:
@@ -106,7 +112,7 @@ tasks:
     desc: Build Go application
     cmds:
       - go build -o gopher-tower ./cmd
-    deps: [go:deps]
+    deps: [go:deps, go:generate]
     sources:
       - "**/*.go"
       - go.mod
@@ -124,7 +130,7 @@ tasks:
     desc: Run Go tests
     cmds:
       - go test -v ./...
-    deps: [go:deps]
+    deps: [go:deps, go:generate]
 
   go:fmt:
     desc: Format Go code
@@ -141,6 +147,12 @@ tasks:
         fi
       - golangci-lint run
     deps: [go:deps]
+
+  go:test:coverage:
+    desc: Run Go tests with coverage
+    deps: [go:deps, go:generate]
+    cmds:
+      - go test -v -race -coverprofile=coverage.out -covermode=atomic ./...
 
   # Combined Tasks
   dev:
@@ -164,7 +176,7 @@ tasks:
   test:coverage:
     desc: Run all tests with coverage
     cmds:
-      - task: go:test
+      - task: go:test:coverage
       - task: frontend:test:coverage
 
   lint:
