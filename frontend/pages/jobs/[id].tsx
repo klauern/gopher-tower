@@ -1,30 +1,24 @@
+import { Navbar } from '@/components/Navbar';
 import { useRouter } from 'next/router';
 import React from 'react';
-import { JobForm } from '../../components/jobs/JobForm';
+import { JobDetail } from '../../components/jobs/JobDetail';
 
-const JobPage: React.FC = () => {
+const JobDetailPage: React.FC = () => {
   const router = useRouter();
   const { id } = router.query;
 
-  const handleClose = () => {
-    router.push('/jobs');
-  };
-
-  const handleSuccess = () => {
+  const handleBack = () => {
     router.push('/jobs');
   };
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-6">Job Details</h1>
-      {id && (
-        <JobForm
-          onClose={handleClose}
-          onSuccess={handleSuccess}
-        />
-      )}
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      <Navbar />
+      <div className="container mx-auto px-4 py-8">
+        {id && <JobDetail jobId={id as string} onBack={handleBack} />}
+      </div>
     </div>
   );
 };
 
-export default JobPage;
+export default JobDetailPage;

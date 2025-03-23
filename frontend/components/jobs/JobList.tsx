@@ -1,5 +1,6 @@
 'use client';
 
+import { getApiUrl } from '@/config';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import { JobListResponse, JobStatus } from '../../types/jobs';
@@ -31,17 +32,24 @@ export function JobList({ status, page, pageSize, onPageChange }: JobListProps) 
           params.append('status', status);
         }
 
-        // Use the environment variable for the API base URL
-        const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || '';
-        const response = await fetch(`${apiBaseUrl}/api/jobs?${params.toString()}`);
+        const url = getApiUrl('jobs');
+        console.log('Fetching jobs from:', url);
+
+        const response = await fetch(`${url}?${params.toString()}`);
+        console.log('Jobs response status:', response.status);
+
         if (!response.ok) {
+          const errorText = await response.text();
+          console.error('Error response:', errorText);
           throw new Error('Failed to fetch jobs');
         }
 
         const jobData: JobListResponse = await response.json();
+        console.log('Jobs data:', jobData);
         setData(jobData);
         setError(null);
       } catch (err) {
+        console.error('Error fetching jobs:', err);
         setError(err instanceof Error ? err.message : 'An error occurred');
       } finally {
         setLoading(false);
@@ -52,7 +60,8 @@ export function JobList({ status, page, pageSize, onPageChange }: JobListProps) 
   }, [page, pageSize, status]);
 
   const handleJobClick = (jobId: string) => {
-    router.push(`/jobs/detail?id=${jobId}`);
+    console.log('Navigating to job:', jobId);
+    router.push(`/jobs/${jobId}`);
   };
 
   if (loading) {

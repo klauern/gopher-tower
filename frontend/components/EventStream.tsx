@@ -29,11 +29,14 @@ export function EventStream({
   const reconnectTimeoutRef = useRef<number | null>(null);
 
   const cleanup = useCallback(() => {
+    console.log('Cleaning up EventStream resources');
     if (reconnectTimeoutRef.current !== null) {
+      console.log('Clearing reconnect timeout');
       window.clearTimeout(reconnectTimeoutRef.current);
       reconnectTimeoutRef.current = null;
     }
     if (eventSourceRef.current) {
+      console.log('Closing existing EventSource connection');
       eventSourceRef.current.close();
       eventSourceRef.current = null;
     }
@@ -44,18 +47,22 @@ export function EventStream({
       // Clean up any existing connection
       cleanup();
 
-      console.log('Attempting to connect to SSE endpoint:', url);
+      console.log('Creating new EventSource connection to:', url);
       const eventSource = new EventSource(url, { withCredentials: false });
       eventSourceRef.current = eventSource;
 
       eventSource.onopen = () => {
-        console.log('SSE connection established');
+        console.log('SSE connection established successfully');
         setIsConnected(true);
         onConnectionChange?.(true);
       };
 
       eventSource.onmessage = (event) => {
-        console.log('Raw SSE message received:', event.data);
+        console.log('SSE message received:', {
+          type: event.type,
+          data: event.data,
+          lastEventId: event.lastEventId,
+        });
         try {
           const data = JSON.parse(event.data) as EventStreamData;
           console.log('Parsed SSE message:', data);
@@ -69,36 +76,47 @@ export function EventStream({
 
       eventSource.onerror = (error) => {
         console.error('SSE connection error:', error);
+        console.log('EventSource readyState:', eventSource.readyState);
         setIsConnected(false);
         onConnectionChange?.(false);
+        onError?.(new Error('SSE connection error'));
 
         // Close the errored connection
         cleanup();
 
         // Attempt to reconnect after the specified interval
-        console.log(`Will attempt to reconnect in ${retryInterval}ms`);
+        console.log(`Scheduling reconnect attempt in ${retryInterval}ms`);
         reconnectTimeoutRef.current = window.setTimeout(() => {
-          console.log('Attempting to reconnect...');
+          console.log('Attempting to reconnect to SSE...');
           connect();
         }, retryInterval);
       };
 
       return eventSource;
     } catch (error) {
-      console.error('Failed to establish SSE connection:', error);
+      console.error('Failed to create EventSource:', error);
       onError?.(new Error('Failed to establish SSE connection'));
       return null;
     }
   }, [url, onMessage, onError, onConnectionChange, retryInterval, cleanup]);
 
   useEffect(() => {
+    console.log('EventStream component mounted, initializing connection');
     connect();
 
     return () => {
-      console.log('Cleaning up SSE connection');
+      console.log('EventStream component unmounting');
       cleanup();
     };
   }, [connect, cleanup]);
+
+  // Add a reconnection effect when the URL changes
+  useEffect(() => {
+    if (isConnected) {
+      console.log('URL changed, reconnecting...');
+      connect();
+    }
+  }, [url, connect]);
 
   if (children) {
     return <>{children(isConnected)}</>;
