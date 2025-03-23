@@ -33,6 +33,15 @@ jobs:
       - name: Install dependencies
         run: task go:deps frontend:install
 
+      - name: Build frontend
+        run: task frontend:build
+
+      - name: Prepare frontend for embedding
+        run: |
+          mkdir -p internal/static/frontend
+          cp -r frontend/.next/static internal/static/frontend/
+          cp -r frontend/public/* internal/static/frontend/ || true
+
       - name: Run tests
         run: task test
 
