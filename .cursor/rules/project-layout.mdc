@@ -1,6 +1,6 @@
 ---
 description: Project Layout
-globs:
+globs: 
 alwaysApply: false
 ---
 - This is an application that uses both Golang and NextJS 15
@@ -10,7 +10,7 @@ alwaysApply: false
   - ESLint
   - App Router
   - Turbopack
-  - Bun runtime for development
+  - Node 22 runtime for development
   - Vitest with React Testing Library for component testing
 - We use Taskfile.yml for common tasks.  New tasks will be added to it to document and outline what new common tasks we can use.
 - Use [CLAUDE.md](mdc:CLAUDE.md) to reference the project in more detail.

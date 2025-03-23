@@ -41,11 +41,13 @@ func (h *Handler) CreateJob(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// TODO: Implement proper authentication
-	// For now, use a default owner ID
-	ownerID := "default-user"
+	userID, ok := r.Context().Value(UserIDKey).(string)
+	if !ok {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
 
-	resp, err := h.service.CreateJob(r.Context(), req, ownerID)
+	resp, err := h.service.CreateJob(r.Context(), req, userID)
 	if err != nil {
 		switch err {
 		case ErrInvalidJob:

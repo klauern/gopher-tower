@@ -2,7 +2,7 @@
 
 ## Build & Test Commands
 
-- **Frontend Dev**: `task frontend:dev` or `cd frontend && bun dev`
+- **Frontend Dev**: `task frontend:dev` or `cd frontend && npm run dev`
 - **Backend Dev**: `task go:run` or `go run ./cmd/main.go`
 - **Full Dev Environment**: `task dev` (runs both frontend and backend)
 - **Lint**: `task lint` (or `task go:lint` / `task frontend:lint`)

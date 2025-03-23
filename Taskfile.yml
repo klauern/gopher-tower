@@ -30,10 +30,10 @@ tasks:
     desc: Install frontend dependencies
     dir: frontend
     cmds:
-      - bun install
+      - npm install
     sources:
       - frontend/package.json
-      - frontend/bun.lockb
+      - frontend/package-lock.json
     generates:
       - frontend/node_modules/**/*
 
@@ -41,56 +41,56 @@ tasks:
     desc: Start frontend development server
     dir: frontend
     cmds:
-      - bun dev
+      - npm run dev
     deps: [frontend:install]
 
   frontend:build:
     desc: Build frontend for production
     dir: frontend
     cmds:
-      - bun run build
+      - npm run build
     deps: [frontend:install]
 
   frontend:test:
     desc: Run frontend tests
     dir: frontend
     cmds:
-      - bun run test
+      - npm run test
     deps: [frontend:install]
 
   frontend:test:watch:
     desc: Run frontend tests in watch mode
     dir: frontend
     cmds:
-      - bun run test:watch
+      - npm run test:watch
     deps: [frontend:install]
 
   frontend:test:ui:
     desc: Run frontend tests with UI
     dir: frontend
     cmds:
-      - bun run test:ui
+      - npm run test:ui
     deps: [frontend:install]
 
   frontend:test:coverage:
     desc: Run frontend tests with coverage report
     dir: frontend
     cmds:
-      - bun run test:coverage
+      - npm run test:coverage
     deps: [frontend:install]
 
   frontend:lint:
     desc: Lint frontend code
     dir: frontend
     cmds:
-      - bun run lint
+      - npm run lint
     deps: [frontend:install]
 
   frontend:fmt:
     desc: Format frontend code
     dir: frontend
     cmds:
-      - bunx next lint --fix
+      - npx next lint --fix
     deps: [frontend:install]
 
   # Go Tasks

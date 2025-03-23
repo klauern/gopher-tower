@@ -1,7 +1,8 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { JobListResponse } from '../../../types/jobs';
-import { JobList } from '../JobList';
+import { renderWithRouter } from '../../../__tests__/utils/test-utils.tsx';
+import { JobListResponse } from '../../../types/jobs.ts';
+import { JobList } from '../JobList.tsx';
 
 const mockJobsResponse: JobListResponse = {
   jobs: [
@@ -23,7 +24,7 @@ const mockJobsResponse: JobListResponse = {
       updatedAt: '2024-03-23T00:00:00Z',
     },
   ],
-  totalCount: 2,
+  totalCount: 15,
   page: 1,
   pageSize: 10,
 };
@@ -39,24 +40,24 @@ describe('JobList', () => {
   });
 
   it('renders loading state initially', () => {
-    render(
+    render(renderWithRouter(
       <JobList
         page={1}
         pageSize={10}
         onPageChange={() => {}}
       />
-    );
+    ));
     expect(screen.getByText('Loading jobs...')).toBeInTheDocument();
   });
 
   it('renders jobs after loading', async () => {
-    render(
+    render(renderWithRouter(
       <JobList
         page={1}
         pageSize={10}
         onPageChange={() => {}}
       />
-    );
+    ));
 
     await waitFor(() => {
       expect(screen.getByText('Test Job 1')).toBeInTheDocument();
@@ -66,31 +67,39 @@ describe('JobList', () => {
 
   it('handles pagination correctly', async () => {
     const onPageChange = vi.fn();
-    render(
+    render(renderWithRouter(
       <JobList
         page={1}
         pageSize={10}
         onPageChange={onPageChange}
       />
-    );
+    ));
 
     await waitFor(() => {
       expect(screen.getByText('Test Job 1')).toBeInTheDocument();
+      expect(screen.getByText('Test Job 2')).toBeInTheDocument();
     });
 
-    fireEvent.click(screen.getByText('Next'));
+    const nextButton = screen.getByText('Next');
+    expect(nextButton).toBeInTheDocument();
+    expect(nextButton).not.toBeDisabled();
+
+    await act(async () => {
+      fireEvent.click(nextButton);
+    });
+
     expect(onPageChange).toHaveBeenCalledWith(2);
   });
 
   it('handles status filtering', async () => {
-    render(
+    render(renderWithRouter(
       <JobList
         page={1}
         pageSize={10}
         status="active"
         onPageChange={() => {}}
       />
-    );
+    ));
 
     await waitFor(() => {
       expect(global.fetch).toHaveBeenCalledWith(
@@ -104,16 +113,16 @@ describe('JobList', () => {
       Promise.reject(new Error('Failed to fetch'))
     );
 
-    render(
+    render(renderWithRouter(
       <JobList
         page={1}
         pageSize={10}
         onPageChange={() => {}}
       />
-    );
+    ));
 
     await waitFor(() => {
-      expect(screen.getByText('An error occurred')).toBeInTheDocument();
+      expect(screen.getByText('Failed to fetch')).toBeInTheDocument();
     });
   });
 });

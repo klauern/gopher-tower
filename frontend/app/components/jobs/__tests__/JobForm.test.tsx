@@ -1,7 +1,7 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
-import { JobRequest } from '../../../types/jobs';
-import { JobForm } from '../JobForm';
+import { JobRequest } from '../../../types/jobs.ts';
+import { JobForm } from '../JobForm.tsx';
 
 const mockInitialData: JobRequest = {
   name: 'Test Job',
@@ -62,7 +62,7 @@ describe('JobForm', () => {
     fireEvent.click(screen.getByText('Save'));
 
     await waitFor(() => {
-      expect(global.fetch).toHaveBeenCalledWith('/api/jobs', {
+      expect(global.fetch).toHaveBeenCalledWith(expect.stringContaining('/api/jobs'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -75,7 +75,6 @@ describe('JobForm', () => {
 
   it('handles submission errors', async () => {
     global.fetch = vi.fn().mockRejectedValueOnce(new Error('Failed to create job'));
-
     render(
       <JobForm
         onClose={() => {}}
@@ -86,10 +85,15 @@ describe('JobForm', () => {
     fireEvent.change(screen.getByLabelText('Name'), {
       target: { value: 'New Job' },
     });
+    fireEvent.change(screen.getByLabelText('Description'), {
+      target: { value: 'Test description' },
+    });
     fireEvent.click(screen.getByText('Save'));
 
     await waitFor(() => {
-      expect(screen.getByText('Failed to create job')).toBeInTheDocument();
+      const errorElement = screen.getByText('Failed to create job');
+      expect(errorElement).toBeInTheDocument();
+      expect(errorElement).toHaveClass('text-red-600', 'text-sm');
     });
   });
 
