@@ -1,5 +1,5 @@
-import { getApiUrl } from "@/app/config";
-import { Job } from "@/app/types/jobs";
+import { getApiUrl } from "@/config";
+import { Job } from "@/types/jobs";
 import { useEffect, useState } from "react";
 
 export function useJob(id: string) {

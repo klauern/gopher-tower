@@ -1,23 +1,27 @@
 import react from '@vitejs/plugin-react';
-import { resolve } from 'path';
+import { dirname, resolve } from 'path';
+import { fileURLToPath } from 'url';
+import tsconfigPaths from 'vite-tsconfig-paths';
 import { defineConfig } from 'vitest/config';
 
+const __dirname = dirname(fileURLToPath(import.meta.url));
+
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), tsconfigPaths()],
   test: {
     environment: 'jsdom',
-    setupFiles: ['./app/test/setup.ts'],
+    setupFiles: ['./test/setup.ts'],
+    include: ['**/*.test.{ts,tsx}'],
     globals: true,
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
     },
-    include: ['**/*.test.{js,jsx,ts,tsx}'],
     exclude: ['node_modules', '.next', 'out'],
   },
   resolve: {
     alias: {
-      '@': resolve(__dirname, './'),
+      '@': resolve(__dirname, '.'),
     },
   },
 });

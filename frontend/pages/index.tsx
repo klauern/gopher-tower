@@ -1,8 +1,6 @@
-'use client';
-
+import { EventStream, EventStreamData } from '@/components/EventStream';
+import { getApiUrl } from '@/config';
 import { useState } from 'react';
-import { EventStream, EventStreamData } from './components/EventStream';
-import { getApiUrl } from './config';
 
 export default function Home() {
   const [events, setEvents] = useState<Array<EventStreamData & { type: string }>>([]);

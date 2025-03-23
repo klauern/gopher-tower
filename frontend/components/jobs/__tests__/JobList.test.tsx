@@ -1,8 +1,8 @@
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { renderWithRouter } from '../../../__tests__/utils/test-utils.tsx';
-import { JobListResponse } from '../../../types/jobs.ts';
-import { JobList } from '../JobList.tsx';
+import { renderWithRouter } from '../../../test/utils/test-utils';
+import { JobListResponse } from '../../../types/jobs';
+import { JobList } from '../JobList';
 
 const mockJobsResponse: JobListResponse = {
   jobs: [
@@ -39,25 +39,42 @@ describe('JobList', () => {
     );
   });
 
-  it('renders loading state initially', () => {
-    render(renderWithRouter(
+  it('renders loading state initially', async () => {
+    let resolveFetch: (value: Response) => void;
+    const fetchPromise = new Promise<Response>((resolve) => {
+      resolveFetch = resolve;
+    });
+
+    vi.spyOn(global, 'fetch').mockImplementationOnce(() => fetchPromise);
+
+    renderWithRouter(
       <JobList
         page={1}
         pageSize={10}
         onPageChange={() => {}}
       />
-    ));
+    );
+
     expect(screen.getByText('Loading jobs...')).toBeInTheDocument();
+
+    await act(async () => {
+      resolveFetch!({
+        ok: true,
+        json: () => Promise.resolve(mockJobsResponse),
+      } as Response);
+    });
   });
 
   it('renders jobs after loading', async () => {
-    render(renderWithRouter(
-      <JobList
-        page={1}
-        pageSize={10}
-        onPageChange={() => {}}
-      />
-    ));
+    await act(async () => {
+      renderWithRouter(
+        <JobList
+          page={1}
+          pageSize={10}
+          onPageChange={() => {}}
+        />
+      );
+    });
 
     await waitFor(() => {
       expect(screen.getByText('Test Job 1')).toBeInTheDocument();
@@ -67,13 +84,15 @@ describe('JobList', () => {
 
   it('handles pagination correctly', async () => {
     const onPageChange = vi.fn();
-    render(renderWithRouter(
-      <JobList
-        page={1}
-        pageSize={10}
-        onPageChange={onPageChange}
-      />
-    ));
+    await act(async () => {
+      renderWithRouter(
+        <JobList
+          page={1}
+          pageSize={10}
+          onPageChange={onPageChange}
+        />
+      );
+    });
 
     await waitFor(() => {
       expect(screen.getByText('Test Job 1')).toBeInTheDocument();
@@ -92,14 +111,16 @@ describe('JobList', () => {
   });
 
   it('handles status filtering', async () => {
-    render(renderWithRouter(
-      <JobList
-        page={1}
-        pageSize={10}
-        status="active"
-        onPageChange={() => {}}
-      />
-    ));
+    await act(async () => {
+      renderWithRouter(
+        <JobList
+          page={1}
+          pageSize={10}
+          status="active"
+          onPageChange={() => {}}
+        />
+      );
+    });
 
     await waitFor(() => {
       expect(global.fetch).toHaveBeenCalledWith(
@@ -113,13 +134,15 @@ describe('JobList', () => {
       Promise.reject(new Error('Failed to fetch'))
     );
 
-    render(renderWithRouter(
-      <JobList
-        page={1}
-        pageSize={10}
-        onPageChange={() => {}}
-      />
-    ));
+    await act(async () => {
+      renderWithRouter(
+        <JobList
+          page={1}
+          pageSize={10}
+          onPageChange={() => {}}
+        />
+      );
+    });
 
     await waitFor(() => {
       expect(screen.getByText('Failed to fetch')).toBeInTheDocument();
