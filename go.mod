@@ -11,7 +11,9 @@ tool (
 require (
 	github.com/go-chi/chi/v5 v5.2.1
 	github.com/google/uuid v1.6.0
+	github.com/urfave/cli/v3 v3.0.0-beta1
 	go.uber.org/mock v0.5.0
+	modernc.org/sqlite v1.36.1
 )
 
 require (
@@ -102,5 +104,4 @@ require (
 	modernc.org/libc v1.61.13 // indirect
 	modernc.org/mathutil v1.7.1 // indirect
 	modernc.org/memory v1.9.0 // indirect
-	modernc.org/sqlite v1.36.1 // indirect
 )

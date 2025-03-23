@@ -6,8 +6,12 @@ export default defineConfig({
   plugins: [react()],
   test: {
     environment: 'jsdom',
+    setupFiles: ['./app/test/setup.ts'],
     globals: true,
-    setupFiles: ['./vitest.setup.js'],
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'json', 'html'],
+    },
     include: ['**/*.test.{js,jsx,ts,tsx}'],
     exclude: ['node_modules', '.next', 'out'],
   },

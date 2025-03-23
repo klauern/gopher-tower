@@ -1,6 +1,8 @@
 package main
 
 import (
+	"database/sql"
+	_ "embed"
 	"encoding/json"
 	"fmt"
 	"io/fs"
@@ -9,12 +11,28 @@ import (
 	"strings"
 	"time"
 
+	"github.com/go-chi/chi/v5"
+	"github.com/klauern/gopher-tower/internal/api/jobs"
+	"github.com/klauern/gopher-tower/internal/db"
 	"github.com/klauern/gopher-tower/internal/static"
+	_ "modernc.org/sqlite"
 )
+
+//go:embed schema.sql
+var schema string
 
 type Event struct {
 	Type    string      `json:"type"`
 	Payload interface{} `json:"payload"`
+}
+
+func initializeDatabase(db *sql.DB) error {
+	// Execute schema
+	if _, err := db.Exec(schema); err != nil {
+		return fmt.Errorf("failed to execute schema: %w", err)
+	}
+
+	return nil
 }
 
 func main() {
@@ -27,11 +45,40 @@ func main() {
 	// Create a file server for static assets
 	fileServer := http.FileServer(http.FS(fsys))
 
+	// Initialize SQLite database
+	dbConn, err := sql.Open("sqlite", "gopher-tower.db")
+	if err != nil {
+		log.Fatalf("Failed to open database: %v", err)
+	}
+	defer dbConn.Close()
+
+	// Test database connection
+	if err := dbConn.Ping(); err != nil {
+		log.Fatalf("Failed to ping database: %v", err)
+	}
+
+	// Initialize database schema
+	if err := initializeDatabase(dbConn); err != nil {
+		log.Fatalf("Failed to initialize database: %v", err)
+	}
+
+	// Create database queries
+	queries := db.New(dbConn)
+
 	// Initialize HTTP server and routes
-	mux := http.NewServeMux()
+	router := chi.NewRouter()
+
+	// Initialize jobs service and handler
+	jobService := jobs.NewService(queries)
+	jobHandler := jobs.NewHandler(jobService)
+
+	// Mount API routes
+	apiRouter := chi.NewRouter()
+	jobHandler.RegisterRoutes(apiRouter)
+	router.Mount("/api", apiRouter)
 
 	// Handle SSE endpoint
-	mux.HandleFunc("/events", func(w http.ResponseWriter, r *http.Request) {
+	router.HandleFunc("/events", func(w http.ResponseWriter, r *http.Request) {
 		// Set CORS headers for all responses
 		w.Header().Set("Access-Control-Allow-Origin", "*")
 		w.Header().Set("Access-Control-Allow-Methods", "GET, OPTIONS")
@@ -53,7 +100,7 @@ func main() {
 	})
 
 	// For everything else, use the file server
-	mux.Handle("/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	router.Handle("/*", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		log.Printf("Request for: %s", r.URL.Path)
 		fileServer.ServeHTTP(w, r)
 	}))
@@ -61,7 +108,7 @@ func main() {
 	port := 8080
 	server := &http.Server{
 		Addr:         fmt.Sprintf(":%d", port),
-		Handler:      mux,
+		Handler:      router,
 		ReadTimeout:  15 * time.Second,
 		WriteTimeout: 2 * time.Hour, // Long timeout for SSE
 		IdleTimeout:  60 * time.Second,

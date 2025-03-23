@@ -127,15 +127,15 @@ func (s *jobService) ListJobs(ctx context.Context, params JobListParams) (*JobLi
 	}
 
 	jobs, err := s.queries.ListJobs(ctx, db.ListJobsParams{
-		Limit:  int64((params.Page - 1) * params.PageSize),
-		Offset: int64(params.PageSize),
+		Limit:  int64(params.PageSize),
+		Offset: int64((params.Page - 1) * params.PageSize),
 	})
 	if err != nil {
 		return nil, err
 	}
 
-	// Filter jobs by status if specified
-	var filteredJobs []db.Job
+	// Initialize an empty slice to ensure we always return a valid JSON array
+	filteredJobs := make([]db.Job, 0)
 	if params.Status != "" {
 		for _, job := range jobs {
 			if job.Status == string(params.Status) {
