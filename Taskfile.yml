@@ -199,10 +199,27 @@ tasks:
       - |
         # Prepare frontend files for embedding
         mkdir -p internal/static/frontend
-        cp -r frontend/.next/static internal/static/frontend/
-        cp -r frontend/public/* internal/static/frontend/
+        cp -r frontend/out/* internal/static/frontend/
       - task: go:build
       - echo "Build completed successfully"
+
+  embedded:
+    desc: Build single binary with frontend embedded
+    cmds:
+      - task: clean
+      - task: frontend:build
+      - |
+        # Prepare frontend files for embedding
+        mkdir -p internal/static/frontend
+        cp -r frontend/out/* internal/static/frontend/
+      - go build -o gopher-tower-embedded -tags embed ./cmd
+      - echo "Embedded build completed successfully"
+
+  run:embedded:
+    desc: Build and run embedded application
+    deps: [embedded]
+    cmds:
+      - ./gopher-tower-embedded
 
   # Docker Tasks
   docker:prepare:
@@ -213,8 +230,7 @@ tasks:
       - |
         # Prepare frontend files for embedding
         mkdir -p internal/static/frontend
-        cp -r frontend/.next/static internal/static/frontend/
-        cp -r frontend/public/* internal/static/frontend/ || true
+        cp -r frontend/out/* internal/static/frontend/
       - echo "Docker build preparation completed"
 
   docker:build:
