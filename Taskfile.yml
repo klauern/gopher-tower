@@ -17,6 +17,13 @@ tasks:
       - task --list
     silent: true
 
+  deps:
+    desc: Install all project dependencies (Go and frontend)
+    cmds:
+      - task: go:deps
+      - task: frontend:install
+    silent: true
+
   clean:
     desc: Clean up build artifacts and temporary files
     cmds:
