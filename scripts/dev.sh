@@ -28,4 +28,4 @@ GO_PID=$!
 
 # Start the frontend dev server
 echo "Starting frontend dev server..."
-cd frontend && exec bun dev
+cd frontend && exec npm run dev

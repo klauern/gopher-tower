@@ -1,17 +1,5 @@
 services:
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-    ports:
-      - "3001:3000"
-    environment:
-      - NODE_ENV=production
-      - NEXT_PUBLIC_API_BASE_URL=http://localhost:8080
-    depends_on:
-      - backend
-
-  backend:
+  app:
     build:
       context: .
       dockerfile: Dockerfile
@@ -21,3 +9,8 @@ services:
       - GO_ENV=production
     volumes:
       - ./logs:/app/logs
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
