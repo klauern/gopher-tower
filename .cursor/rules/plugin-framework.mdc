@@ -1,0 +1,277 @@
+---
+description: This rule relates to the design and implementation decisions around plugins and adding or modifying support for new plugin types
+globs: 
+alwaysApply: false
+---
+# Plugin Framework Design Document
+
+## Overview
+
+This document outlines the design for a plugin framework in Gopher Tower that enables running various types of jobs through different execution engines (CLI tools, Python scripts, etc.).
+
+## Goals
+
+1. Create a flexible plugin system that can support multiple job execution engines
+2. Integrate with the existing jobs service
+3. Provide a minimal, clear interface for implementing new plugins
+4. Support common use cases like CLI tools and Python scripts
+5. Enable future extensibility for other runtimes (Ruby, native plugins, etc.)
+
+## Architecture
+
+### Core Components
+
+#### 1. Plugin Interface
+
+```go
+type Plugin interface {
+    // Name returns the unique identifier for this plugin
+    Name() string
+
+    // Description provides details about what the plugin does
+    Description() string
+
+    // Version returns the plugin version
+    Version() string
+
+    // Validate checks if the job configuration is valid for this plugin
+    Validate(config map[string]interface{}) error
+
+    // Execute runs the job with the given configuration
+    Execute(ctx context.Context, config map[string]interface{}) (JobResult, error)
+
+    // Capabilities returns what features this plugin supports
+    Capabilities() PluginCapabilities
+}
+
+type PluginCapabilities struct {
+    SupportsCancel     bool
+    SupportsProgress   bool
+    SupportsConcurrent bool
+}
+
+type JobResult struct {
+    ExitCode    int
+    Output      string
+    Error       string
+    Metadata    map[string]interface{}
+}
+```
+
+#### 2. Built-in Plugins
+
+##### CLI Plugin
+
+- Executes command-line tools with arguments and flags
+- Handles environment variables and working directory
+- Supports output capture and error handling
+- Example config:
+
+```json
+{
+    "command": "ffmpeg",
+    "args": ["-i", "input.mp4", "output.mp4"],
+    "env": {
+        "PATH": "/usr/local/bin:$PATH"
+    },
+    "workdir": "/path/to/working/dir"
+}
+```
+
+##### Python Plugin
+
+- Runs Python scripts in a uv-enabled virtual environment
+- Manages dependencies through requirements.txt
+- Supports Click-based CLI tools
+- Example config:
+
+```json
+{
+    "script": "process_data.py",
+    "venv": {
+        "path": ".venv",
+        "requirements": ["pandas==2.0.0", "click==8.0.0"]
+    },
+    "args": ["--input", "data.csv", "--output", "results.json"]
+}
+```
+
+#### 3. Plugin Registry
+
+```go
+type PluginRegistry interface {
+    // Register adds a new plugin to the registry
+    Register(plugin Plugin) error
+
+    // Get retrieves a plugin by name
+    Get(name string) (Plugin, error)
+
+    // List returns all registered plugins
+    List() []Plugin
+
+    // Unregister removes a plugin from the registry
+    Unregister(name string) error
+}
+```
+
+### Integration with Jobs Service
+
+#### 1. Extended Job Model
+
+```go
+type JobConfig struct {
+    PluginName string                 `json:"plugin_name"`
+    Config     map[string]interface{} `json:"config"`
+}
+
+type Job struct {
+    // Existing fields...
+    PluginConfig JobConfig `json:"plugin_config"`
+}
+```
+
+#### 2. Job Executor Service
+
+```go
+type JobExecutor interface {
+    // ExecuteJob runs a job using its configured plugin
+    ExecuteJob(ctx context.Context, job *Job) error
+
+    // CancelJob attempts to cancel a running job
+    CancelJob(ctx context.Context, jobID string) error
+
+    // GetJobStatus returns detailed status of a job
+    GetJobStatus(ctx context.Context, jobID string) (*JobStatus, error)
+}
+```
+
+## Implementation Plan
+
+### Phase 1: Core Framework
+
+1. Define and implement the Plugin interface
+2. Create the PluginRegistry
+3. Extend the Job model to support plugin configuration
+4. Implement the JobExecutor service
+
+### Phase 2: Built-in Plugins
+
+1. Implement the CLI Plugin
+   - Command execution
+   - Environment management
+   - Output capture
+2. Implement the Python Plugin
+   - Virtual environment management with uv
+   - Dependency installation
+   - Script execution
+
+### Phase 3: Integration
+
+1. Update the jobs service to use the plugin framework
+2. Add plugin-specific API endpoints
+3. Update the CLI to support plugin operations
+4. Add plugin management commands
+
+### Phase 4: UI Integration
+
+1. Add plugin configuration UI components
+2. Implement plugin-specific job creation flows
+3. Add plugin status and output displays
+
+## Security Considerations
+
+1. Plugin Isolation
+   - Run plugins in isolated environments
+   - Limit system access based on plugin type
+   - Validate plugin configurations
+
+2. Resource Management
+   - Implement resource limits per plugin
+   - Monitor and control plugin resource usage
+   - Support graceful plugin termination
+
+3. Configuration Validation
+   - Validate all plugin configurations
+   - Sanitize inputs and outputs
+   - Prevent command injection
+
+## Testing Strategy
+
+1. Unit Tests
+   - Plugin interface implementations
+   - Plugin registry operations
+   - Job executor logic
+
+2. Integration Tests
+   - End-to-end plugin execution
+   - Plugin lifecycle management
+   - Job service integration
+
+3. Security Tests
+   - Input validation
+   - Resource isolation
+   - Error handling
+
+## Future Extensions
+
+1. Additional Plugin Types
+   - Ruby runtime
+   - Native plugins (OS-specific)
+   - Container execution
+   - Remote execution
+
+2. Enhanced Features
+   - Plugin dependencies
+   - Plugin versioning
+   - Plugin marketplace
+   - Custom UI components per plugin
+
+3. Monitoring and Observability
+   - Plugin metrics
+   - Performance tracking
+   - Usage analytics
+
+## Example Usage
+
+### CLI Plugin
+
+```go
+job := &Job{
+    Name: "Convert Video",
+    PluginConfig: JobConfig{
+        PluginName: "cli",
+        Config: map[string]interface{}{
+            "command": "ffmpeg",
+            "args": []string{
+                "-i", "input.mp4",
+                "-c:v", "libx264",
+                "output.mp4",
+            },
+        },
+    },
+}
+```
+
+### Python Plugin
+
+```go
+job := &Job{
+    Name: "Process Data",
+    PluginConfig: JobConfig{
+        PluginName: "python",
+        Config: map[string]interface{}{
+            "script": "process_data.py",
+            "venv": map[string]interface{}{
+                "requirements": []string{
+                    "pandas==2.0.0",
+                    "numpy==1.24.0",
+                },
+            },
+            "args": []string{
+                "--input", "data.csv",
+                "--output", "results.json",
+            },
+        },
+    },
+}
+```
