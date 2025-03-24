@@ -1,3 +1,4 @@
+import { Navbar } from '@/components/Navbar';
 import { useRouter } from 'next/router';
 import React, { useState } from 'react';
 import { JobFilters } from '../../components/jobs/JobFilters';
@@ -20,28 +21,31 @@ const JobsPage: React.FC = () => {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">Jobs</h1>
-        <button
-          onClick={handleCreateJob}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium"
-        >
-          Create Job
-        </button>
-      </div>
-      <div className="mb-6">
-        <JobFilters
-          selectedStatus={selectedStatus}
-          onStatusChange={handleStatusChange}
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      <Navbar />
+      <div className="container mx-auto px-4 py-8">
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Jobs</h1>
+          <button
+            onClick={handleCreateJob}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium"
+          >
+            Create Job
+          </button>
+        </div>
+        <div className="mb-6">
+          <JobFilters
+            selectedStatus={selectedStatus}
+            onStatusChange={handleStatusChange}
+          />
+        </div>
+        <JobList
+          status={selectedStatus}
+          page={page}
+          pageSize={pageSize}
+          onPageChange={setPage}
         />
       </div>
-      <JobList
-        status={selectedStatus}
-        page={page}
-        pageSize={pageSize}
-        onPageChange={setPage}
-      />
     </div>
   );
 };
