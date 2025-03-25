@@ -1,3 +1,4 @@
+import { ThemeProvider } from "@/components/theme-provider";
 import type { AppProps } from 'next/app';
 import { Geist, Geist_Mono } from "next/font/google";
 import "../styles/globals.css";
@@ -14,7 +15,7 @@ const geistMono = Geist_Mono({
 
 export default function App({ Component, pageProps }: AppProps) {
   return (
-    <>
+    <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
       <style jsx global>{`
         :root {
           --font-geist-sans: ${geistSans.variable};
@@ -24,6 +25,6 @@ export default function App({ Component, pageProps }: AppProps) {
       <div className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <Component {...pageProps} />
       </div>
-    </>
+    </ThemeProvider>
   );
 }

@@ -9,36 +9,40 @@ describe('Button', () => {
     const button = screen.getByText('Click me');
 
     expect(button).toBeInTheDocument();
-    expect(button).toHaveClass('bg-blue-600'); // primary variant
-    expect(button).toHaveClass('px-4 py-2'); // md size
+    expect(button).toHaveClass('bg-primary');
+    expect(button).toHaveClass('h-9 px-4 py-2'); // default size
   });
 
   it('renders with different variants', () => {
     const { rerender } = render(<Button variant="secondary">Secondary</Button>);
     let button = screen.getByText('Secondary');
-    expect(button).toHaveClass('bg-gray-100');
+    expect(button).toHaveClass('bg-secondary');
 
-    rerender(<Button variant="danger">Danger</Button>);
-    button = screen.getByText('Danger');
-    expect(button).toHaveClass('bg-red-600');
+    rerender(<Button variant="destructive">Destructive</Button>);
+    button = screen.getByText('Destructive');
+    expect(button).toHaveClass('bg-destructive');
 
-    rerender(<Button variant="primary">Primary</Button>);
-    button = screen.getByText('Primary');
-    expect(button).toHaveClass('bg-blue-600');
+    rerender(<Button variant="outline">Outline</Button>);
+    button = screen.getByText('Outline');
+    expect(button).toHaveClass('border-input');
   });
 
   it('renders with different sizes', () => {
     const { rerender } = render(<Button size="sm">Small</Button>);
     let button = screen.getByText('Small');
-    expect(button).toHaveClass('px-2 py-1 text-sm');
+    expect(button).toHaveClass('h-8');
+    expect(button).toHaveClass('px-3');
+    expect(button).toHaveClass('text-xs');
 
     rerender(<Button size="lg">Large</Button>);
     button = screen.getByText('Large');
-    expect(button).toHaveClass('px-6 py-3 text-lg');
+    expect(button).toHaveClass('h-10');
+    expect(button).toHaveClass('px-8');
 
-    rerender(<Button size="md">Medium</Button>);
-    button = screen.getByText('Medium');
-    expect(button).toHaveClass('px-4 py-2');
+    rerender(<Button size="icon">Icon</Button>);
+    button = screen.getByText('Icon');
+    expect(button).toHaveClass('h-9');
+    expect(button).toHaveClass('w-9');
   });
 
   it('applies custom className', () => {
@@ -51,6 +55,7 @@ describe('Button', () => {
     render(<Button disabled>Disabled</Button>);
     const button = screen.getByText('Disabled');
     expect(button).toBeDisabled();
+    expect(button).toHaveClass('disabled:pointer-events-none');
     expect(button).toHaveClass('disabled:opacity-50');
   });
 
