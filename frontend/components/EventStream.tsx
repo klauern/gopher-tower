@@ -112,11 +112,13 @@ export function EventStream({
 
   // Add a reconnection effect when the URL changes
   useEffect(() => {
-    if (isConnected) {
+    // Skip the initial mount since the other effect handles it
+    const shouldReconnect = isConnected && eventSourceRef.current?.url !== url;
+    if (shouldReconnect) {
       console.log('URL changed, reconnecting...');
       connect();
     }
-  }, [url, connect]);
+  }, [url, connect, isConnected]);
 
   if (children) {
     return <>{children(isConnected)}</>;

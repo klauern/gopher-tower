@@ -17,14 +17,9 @@ class MockEventSource {
   }
 
   close() {
-    // Simulate connection close
     this.readyState = 2;
   }
 }
-
-// Replace global EventSource with mock
-const originalEventSource = global.EventSource;
-global.EventSource = MockEventSource as unknown as typeof EventSource;
 
 describe('EventStream', () => {
   const mockUrl = '/api/events';
@@ -32,15 +27,19 @@ describe('EventStream', () => {
 
   beforeEach(() => {
     vi.useFakeTimers();
-    mockEventSource = new MockEventSource(mockUrl);
+    // Mock the global EventSource
+    global.EventSource = vi.fn().mockImplementation((url: string, options?: { withCredentials: boolean }) => {
+      mockEventSource = new MockEventSource(url, options);
+      return mockEventSource;
+    }) as unknown as typeof EventSource;
   });
 
   afterEach(() => {
-    vi.restoreAllMocks();
+    vi.clearAllMocks();
     vi.useRealTimers();
   });
 
-  it('establishes connection on mount', async () => {
+  it('establishes connection on mount', () => {
     const onConnectionChange = vi.fn();
     render(
       <EventStream url={mockUrl} onConnectionChange={onConnectionChange} />
@@ -54,7 +53,7 @@ describe('EventStream', () => {
     expect(onConnectionChange).toHaveBeenCalledWith(true);
   });
 
-  it('handles messages correctly', async () => {
+  it('handles messages correctly', () => {
     const onMessage = vi.fn();
     const testData: EventStreamData = {
       type: 'test',
@@ -75,7 +74,7 @@ describe('EventStream', () => {
     expect(onMessage).toHaveBeenCalledWith(testData);
   });
 
-  it('handles connection errors', async () => {
+  it('handles connection errors', () => {
     const onError = vi.fn();
     const onConnectionChange = vi.fn();
 
@@ -102,10 +101,10 @@ describe('EventStream', () => {
     });
 
     // Verify reconnection attempt
-    expect(mockEventSource.readyState).toBe(2); // Closed
+    expect(global.EventSource).toHaveBeenCalledTimes(2);
   });
 
-  it('handles message parsing errors', async () => {
+  it('handles message parsing errors', () => {
     const onError = vi.fn();
 
     render(
@@ -131,6 +130,7 @@ describe('EventStream', () => {
       </EventStream>
     );
 
+    // Initially disconnected
     expect(getByText('Disconnected')).toBeInTheDocument();
 
     // Simulate connection
@@ -146,27 +146,40 @@ describe('EventStream', () => {
       <EventStream url={mockUrl} />
     );
 
-    unmount();
-
-    expect(mockEventSource.readyState).toBe(2); // Closed
-  });
-
-  it('reconnects when URL changes', () => {
-    const { rerender } = render(
-      <EventStream url={mockUrl} />
-    );
-
-    // Simulate initial connection
+    // Simulate successful connection
     act(() => {
       mockEventSource.onopen?.();
     });
 
-    // Change URL
-    rerender(<EventStream url="/api/events/new" />);
+    unmount();
 
-    expect(mockEventSource.readyState).toBe(2); // Old connection closed
+    // Verify cleanup
+    expect(mockEventSource.readyState).toBe(2);
+  });
+
+  it('reconnects when URL changes', async () => {
+    const { rerender } = render(
+      <EventStream url={mockUrl} />
+    );
+
+    // Wait for initial connection
+    await act(async () => {
+      mockEventSource.onopen?.();
+      await vi.runAllTimersAsync();
+    });
+
+    // Verify initial connection
+    expect(global.EventSource).toHaveBeenCalledTimes(1);
+    expect(global.EventSource).toHaveBeenLastCalledWith(mockUrl, expect.any(Object));
+
+    // Change URL
+    await act(async () => {
+      rerender(<EventStream url="/api/events/new" />);
+      await vi.runAllTimersAsync();
+    });
+
+    // Verify new connection was created
+    expect(global.EventSource).toHaveBeenCalledTimes(2);
+    expect(global.EventSource).toHaveBeenLastCalledWith('/api/events/new', expect.any(Object));
   });
 });
-
-// Restore original EventSource
-global.EventSource = originalEventSource;
