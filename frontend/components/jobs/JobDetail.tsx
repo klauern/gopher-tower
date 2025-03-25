@@ -1,4 +1,15 @@
+'use client';
+
+import { Button } from "@/components/ui/Button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { getApiUrl } from '@/config';
+import { ArrowLeft } from "lucide-react";
 import { useEffect, useState } from 'react';
 import { Job } from '../../types/jobs';
 import { formatDate } from '../../utils/date';
@@ -49,52 +60,77 @@ export function JobDetail({ jobId, onBack }: JobDetailProps) {
   }, [jobId]);
 
   if (loading) {
-    return <div className="text-center">Loading...</div>;
+    return (
+      <Card>
+        <CardContent className="pt-6">
+          <div className="text-center text-muted-foreground">Loading...</div>
+        </CardContent>
+      </Card>
+    );
   }
 
   if (error) {
-    return <div className="text-red-600 text-center">{error}</div>;
+    return (
+      <Card>
+        <CardContent className="pt-6">
+          <div className="text-center text-destructive">{error}</div>
+        </CardContent>
+      </Card>
+    );
   }
 
   if (!job) {
-    return <div className="text-center">Job not found</div>;
+    return (
+      <Card>
+        <CardContent className="pt-6">
+          <div className="text-center text-muted-foreground">Job not found</div>
+        </CardContent>
+      </Card>
+    );
   }
 
   return (
-    <div>
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Job Details</h1>
-        <button
-          onClick={onBack}
-          className="text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white"
-        >
-          Back to Jobs
-        </button>
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-2">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onBack}
+          >
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+          <h1 className="text-3xl font-bold">Job Details</h1>
+        </div>
       </div>
-      <div className="bg-white dark:bg-gray-800 shadow-sm rounded-lg p-6">
-        <div className="space-y-6">
-          <div>
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">{job.name}</h2>
-            <p className="text-gray-600 dark:text-gray-300">{job.description}</p>
-          </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>{job.name}</CardTitle>
+          {job.description && (
+            <CardDescription>{job.description}</CardDescription>
+          )}
+        </CardHeader>
+        <CardContent className="space-y-6">
           <div className="flex items-center space-x-4">
             <JobStatusBadge status={job.status} />
-            <span className="text-sm text-gray-500 dark:text-gray-400">
+            <span className="text-sm text-muted-foreground">
               Created: {formatDate(job.createdAt)}
             </span>
           </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Start Date</p>
-              <p className="mt-1">{job.startDate ? formatDate(job.startDate) : 'Not started'}</p>
+
+          <div className="grid grid-cols-2 gap-6">
+            <div className="space-y-1">
+              <p className="text-sm font-medium text-muted-foreground">Start Date</p>
+              <p>{job.startDate ? formatDate(job.startDate) : 'Not started'}</p>
             </div>
-            <div>
-              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">End Date</p>
-              <p className="mt-1">{job.endDate ? formatDate(job.endDate) : 'Not completed'}</p>
+            <div className="space-y-1">
+              <p className="text-sm font-medium text-muted-foreground">End Date</p>
+              <p>{job.endDate ? formatDate(job.endDate) : 'Not completed'}</p>
             </div>
           </div>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

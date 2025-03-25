@@ -59,18 +59,26 @@ This document outlines the step-by-step plan for migrating our frontend componen
 
 #### Navbar Migration
 
-1. [ ] Replace current Navbar with shadcn/ui navigation menu
-   - Migrate existing links and structure
-   - Implement responsive design
-   - Add dropdown menus if needed
+1. [x] Replace current Navbar with shadcn/ui navigation menu
+   - [x] Migrate existing links and structure
+   - [x] Implement responsive design
+   - [x] Add dropdown menus for Home section (Dashboard/Events)
 
 #### EventStream Component
 
-1. [ ] Break down into smaller components
-2. [ ] Integrate shadcn/ui components:
-   - Use Card for event containers
-   - Add Toast for notifications
-   - Implement Dialog for detailed views
+1. [x] Break down into smaller components
+2. [x] Move to dedicated `/events` route
+3. [ ] Integrate shadcn/ui components:
+   - [x] Use Card for event containers
+   - [ ] Add Toast for notifications
+   - [ ] Implement Dialog for detailed views
+
+#### Dashboard Component (New)
+
+1. [x] Create placeholder Dashboard component for the home page
+2. [ ] Implement key metrics display
+3. [ ] Add system status overview
+4. [ ] Integrate with existing data sources
 
 #### Jobs Components
 
@@ -121,9 +129,10 @@ Use this section to track progress as we implement changes:
 
 ```markdown
 ### Current Status
-- Phase: Phase 1 - Core Infrastructure
-- Next Action: Begin Phase 2 - Component Migration (starting with Navbar)
-- Completed Items: 10/25
+- Phase: Phase 2 - Component Migration
+- Next Action: Enhance EventStream with Toast notifications and Dialog for details
+- Completed Items: 14/25
+- Latest Update: Moved EventStream to dedicated route and created Dashboard placeholder
 ```
 
 ## Notes and Decisions
@@ -132,3 +141,6 @@ Use this section to track progress as we implement changes:
 - Maintain TypeScript strict mode
 - Follow existing testing patterns
 - Keep accessibility features intact
+- Dashboard will be the new landing page
+- Event Stream moved to dedicated `/events` route
+- Using shadcn/ui Card components for consistent UI

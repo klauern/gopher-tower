@@ -1,5 +1,14 @@
 'use client';
 
+import { Button } from "@/components/ui/Button";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { getApiUrl } from '@/config';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
@@ -76,82 +85,72 @@ export function JobList({ status, page, pageSize, onPageChange }: JobListProps) 
     return <div className="text-center py-4">No jobs found</div>;
   }
 
-  const totalPages = Math.ceil(data.totalCount / pageSize);
+  const hasNextPage = data.totalCount > page * pageSize;
 
   return (
     <div>
-      <div className="overflow-x-auto">
-        <table className="min-w-full bg-white shadow-sm rounded-lg">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Name
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Status
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Start Date
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                End Date
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Created At
-              </th>
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
+      <div className="rounded-md border">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Name</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead>Start Date</TableHead>
+              <TableHead>End Date</TableHead>
+              <TableHead>Created At</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
             {data.jobs.map((job) => (
-              <tr
+              <TableRow
                 key={job.id}
-                className="hover:bg-gray-50 cursor-pointer transition-colors"
+                className="cursor-pointer hover:bg-muted/50"
                 onClick={() => handleJobClick(job.id)}
               >
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm font-medium text-gray-900">
-                    {job.name}
-                  </div>
-                  <div className="text-sm text-gray-500">{job.description}</div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
+                <TableCell>
+                  <div className="font-medium">{job.name}</div>
+                  <div className="text-sm text-muted-foreground">{job.description}</div>
+                </TableCell>
+                <TableCell>
                   <JobStatusBadge status={job.status} />
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                </TableCell>
+                <TableCell className="text-muted-foreground">
                   {job.startDate ? formatDate(job.startDate) : '-'}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                </TableCell>
+                <TableCell className="text-muted-foreground">
                   {job.endDate ? formatDate(job.endDate) : '-'}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                </TableCell>
+                <TableCell className="text-muted-foreground">
                   {formatDate(job.createdAt)}
-                </td>
-              </tr>
+                </TableCell>
+              </TableRow>
             ))}
-          </tbody>
-        </table>
+          </TableBody>
+        </Table>
       </div>
 
-      <div className="flex justify-between items-center mt-4">
-        <div className="text-sm text-gray-700">
-          Showing {(page - 1) * pageSize + 1} to{' '}
-          {Math.min(page * pageSize, data.totalCount)} of {data.totalCount} jobs
+      <div className="flex items-center justify-between space-x-2 py-4">
+        <div className="text-sm text-muted-foreground">
+          Showing {data.jobs.length === 0 ? 0 : (page - 1) * pageSize + 1} to{' '}
+          {(page - 1) * pageSize + data.jobs.length} of {data.totalCount} jobs
         </div>
         <div className="flex space-x-2">
-          <button
+          <Button
+            variant="outline"
+            size="sm"
             onClick={() => onPageChange(page - 1)}
             disabled={page === 1}
-            className="px-3 py-1 border rounded disabled:opacity-50"
           >
             Previous
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
             onClick={() => onPageChange(page + 1)}
-            disabled={page >= totalPages}
-            className="px-3 py-1 border rounded disabled:opacity-50"
+            disabled={!hasNextPage}
           >
             Next
-          </button>
+          </Button>
         </div>
       </div>
     </div>
