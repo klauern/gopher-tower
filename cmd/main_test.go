@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"context"
 	"database/sql"
 	"encoding/json"
 	"net/http"
@@ -58,12 +59,32 @@ func TestHandleSSE(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			// Create a context with timeout and test flag
+			ctx := context.WithValue(context.Background(), "test", true)
+			ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+			defer cancel()
+
 			req := httptest.NewRequest(tt.method, "/api/events", nil)
+			req = req.WithContext(ctx)
 			w := httptest.NewRecorder()
 
-			handleSSE(w, req)
+			// Create a done channel to signal test completion
+			done := make(chan struct{})
+			go func() {
+				handleSSE(w, req)
+				close(done)
+			}()
+
+			// Wait for either context timeout or test completion
+			select {
+			case <-ctx.Done():
+				t.Fatal("Test timed out")
+			case <-done:
+				// Test completed normally
+			}
 
 			resp := w.Result()
+			defer resp.Body.Close()
 			assert.Equal(t, tt.expectedStatus, resp.StatusCode)
 
 			if tt.validateBody {
@@ -83,9 +104,6 @@ func TestHandleSSE(t *testing.T) {
 						err := json.Unmarshal([]byte(strings.TrimPrefix(line, "data: ")), &event)
 						require.NoError(t, err)
 						events = append(events, event)
-
-						// Break after receiving first event to avoid waiting for more
-						break
 					}
 				}
 

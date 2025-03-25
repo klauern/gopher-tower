@@ -55,8 +55,8 @@ func TestJobsCommand(t *testing.T) {
 	defer server.Close()
 
 	t.Run("list command", func(t *testing.T) {
-		// Create a root command with server URL
-		root := &cli.Command{
+		// Create root command
+		app := &cli.Command{
 			Name: "test",
 			Flags: []cli.Flag{
 				&cli.StringFlag{
@@ -66,9 +66,9 @@ func TestJobsCommand(t *testing.T) {
 			},
 		}
 
-		// Add the jobs command as a subcommand
+		// Add jobs command as subcommand
 		jobsCmd := JobsCommand()
-		root.Commands = append(root.Commands, jobsCmd)
+		app.Commands = append(app.Commands, jobsCmd)
 
 		// Find the list subcommand
 		var listCmd *cli.Command
@@ -80,17 +80,15 @@ func TestJobsCommand(t *testing.T) {
 		}
 		require.NotNil(t, listCmd)
 
-		// Set up command context
-		ctx := context.Background()
-
 		// Test with default flags
-		err := listCmd.Action(ctx, listCmd)
+		ctx := context.Background()
+		err := app.Run(ctx, []string{"test", "--server", server.URL, "jobs", "list"})
 		assert.NoError(t, err)
 	})
 
 	t.Run("status command", func(t *testing.T) {
-		// Create a root command with server URL
-		root := &cli.Command{
+		// Create root command
+		app := &cli.Command{
 			Name: "test",
 			Flags: []cli.Flag{
 				&cli.StringFlag{
@@ -100,9 +98,9 @@ func TestJobsCommand(t *testing.T) {
 			},
 		}
 
-		// Add the jobs command as a subcommand
+		// Add jobs command as subcommand
 		jobsCmd := JobsCommand()
-		root.Commands = append(root.Commands, jobsCmd)
+		app.Commands = append(app.Commands, jobsCmd)
 
 		// Find the status subcommand
 		var statusCmd *cli.Command
@@ -114,21 +112,15 @@ func TestJobsCommand(t *testing.T) {
 		}
 		require.NotNil(t, statusCmd)
 
-		// Set up command context
+		// Test with job ID
 		ctx := context.Background()
-
-		// Set job ID flag
-		err := statusCmd.Set("id", "1")
-		require.NoError(t, err)
-
-		// Test command execution
-		err = statusCmd.Action(ctx, statusCmd)
+		err := app.Run(ctx, []string{"test", "--server", server.URL, "jobs", "status", "--id", "1"})
 		assert.NoError(t, err)
 	})
 
 	t.Run("invalid server URL", func(t *testing.T) {
-		// Create a root command with invalid server URL
-		root := &cli.Command{
+		// Create root command
+		app := &cli.Command{
 			Name: "test",
 			Flags: []cli.Flag{
 				&cli.StringFlag{
@@ -138,9 +130,9 @@ func TestJobsCommand(t *testing.T) {
 			},
 		}
 
-		// Add the jobs command as a subcommand
+		// Add jobs command as subcommand
 		jobsCmd := JobsCommand()
-		root.Commands = append(root.Commands, jobsCmd)
+		app.Commands = append(app.Commands, jobsCmd)
 
 		// Find the list subcommand
 		var listCmd *cli.Command
@@ -152,11 +144,9 @@ func TestJobsCommand(t *testing.T) {
 		}
 		require.NotNil(t, listCmd)
 
-		// Set up command context
+		// Test with invalid server
 		ctx := context.Background()
-
-		// Test command execution
-		err := listCmd.Action(ctx, listCmd)
+		err := app.Run(ctx, []string{"test", "--server", "http://invalid-server", "jobs", "list"})
 		assert.Error(t, err)
 	})
 
@@ -166,8 +156,8 @@ func TestJobsCommand(t *testing.T) {
 		}))
 		defer errorServer.Close()
 
-		// Create a root command with error server URL
-		root := &cli.Command{
+		// Create root command
+		app := &cli.Command{
 			Name: "test",
 			Flags: []cli.Flag{
 				&cli.StringFlag{
@@ -177,9 +167,9 @@ func TestJobsCommand(t *testing.T) {
 			},
 		}
 
-		// Add the jobs command as a subcommand
+		// Add jobs command as subcommand
 		jobsCmd := JobsCommand()
-		root.Commands = append(root.Commands, jobsCmd)
+		app.Commands = append(app.Commands, jobsCmd)
 
 		// Find the list subcommand
 		var listCmd *cli.Command
@@ -191,11 +181,9 @@ func TestJobsCommand(t *testing.T) {
 		}
 		require.NotNil(t, listCmd)
 
-		// Set up command context
+		// Test with error server
 		ctx := context.Background()
-
-		// Test command execution
-		err := listCmd.Action(ctx, listCmd)
+		err := app.Run(ctx, []string{"test", "--server", errorServer.URL, "jobs", "list"})
 		assert.Error(t, err)
 	})
 }

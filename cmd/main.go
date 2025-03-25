@@ -124,6 +124,12 @@ func main() {
 }
 
 func handleSSE(w http.ResponseWriter, r *http.Request) {
+	// Only allow GET requests for SSE
+	if r.Method != "GET" {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
 	log.Printf("New client connected from %s\n", r.RemoteAddr)
 
 	// Set headers for SSE
@@ -147,7 +153,7 @@ func handleSSE(w http.ResponseWriter, r *http.Request) {
 	flusher.Flush()
 
 	// Create a channel to notify of client disconnect
-	notify := r.Context().Done()
+	ctx := r.Context()
 
 	// Send events every second
 	ticker := time.NewTicker(1 * time.Second)
@@ -164,7 +170,7 @@ func handleSSE(w http.ResponseWriter, r *http.Request) {
 	counter := 0
 	for connected {
 		select {
-		case <-notify:
+		case <-ctx.Done():
 			connected = false
 			return
 		case <-ticker.C:
@@ -215,6 +221,11 @@ func handleSSE(w http.ResponseWriter, r *http.Request) {
 			flusher.Flush()
 
 			log.Printf("Sent event to %s: %s", r.RemoteAddr, strings.TrimSpace(string(data)))
+
+			// In test mode, exit after sending one event
+			if _, isTest := ctx.Value("test").(bool); isTest {
+				return
+			}
 		}
 	}
 }

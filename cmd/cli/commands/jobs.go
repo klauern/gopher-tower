@@ -70,7 +70,17 @@ func JobsCommand() *cli.Command {
 					},
 				},
 				Action: func(ctx context.Context, cmd *cli.Command) error {
-					serverURL := cmd.Root().String("server")
+					// Get server URL from root command
+					root := cmd.Root()
+					if root == nil {
+						return fmt.Errorf("root command not found")
+					}
+					serverURL := root.String("server")
+					if serverURL == "" {
+						return fmt.Errorf("server URL not provided")
+					}
+
+					// Get flags from command
 					page := cmd.Int("page")
 					pageSize := cmd.Int("page-size")
 					status := cmd.String("status")
@@ -141,8 +151,22 @@ func JobsCommand() *cli.Command {
 					},
 				},
 				Action: func(ctx context.Context, cmd *cli.Command) error {
-					serverURL := cmd.Root().String("server")
+					// Get server URL from root command
+					root := cmd.Root()
+					if root == nil {
+						return fmt.Errorf("root command not found")
+					}
+					serverURL := root.String("server")
+					if serverURL == "" {
+						return fmt.Errorf("server URL not provided")
+					}
+
+					// Get flags from command
 					jobID := cmd.String("id")
+					if jobID == "" {
+						return fmt.Errorf("job ID not provided")
+					}
+
 					url := fmt.Sprintf("%s/api/jobs/%s", serverURL, jobID)
 
 					resp, err := http.Get(url)
