@@ -1,0 +1,53 @@
+{
+  "name": "Gopher Tower Development",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "context": ".."
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "golang.go",
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "bradlc.vscode-tailwindcss",
+        "ms-vscode.vscode-typescript-next",
+        "eamodio.gitlens",
+        "GitHub.copilot"
+      ],
+      "settings": {
+        "go.toolsManagement.checkForUpdates": "local",
+        "go.useLanguageServer": true,
+        "go.gopath": "/go",
+        "[typescript]": {
+          "editor.defaultFormatter": "esbenp.prettier-vscode",
+          "editor.formatOnSave": true
+        },
+        "[typescriptreact]": {
+          "editor.defaultFormatter": "esbenp.prettier-vscode",
+          "editor.formatOnSave": true
+        },
+        "typescript.updateImportsOnFileMove.enabled": "always",
+        "javascript.updateImportsOnFileMove.enabled": "always",
+        "tailwindCSS.includeLanguages": {
+          "typescript": "javascript",
+          "typescriptreact": "javascript"
+        }
+      }
+    }
+  },
+  "features": {
+    "ghcr.io/devcontainers/features/git:1": {},
+    "ghcr.io/devcontainers/features/github-cli:1": {},
+    "ghcr.io/devcontainers/features/go:1": {
+      "version": "latest"
+    }
+  },
+  "forwardPorts": [3000, 8080],
+  "postCreateCommand": "mkdir -p /root/.cursor-server/data/User/workspaceStorage && go install github.com/evilmartians/lefthook@latest && task deps",
+  "remoteUser": "root",
+  "workspaceMount": "source=${localWorkspaceFolder},target=/workspaces/gopher-tower,type=bind,consistency=delegated",
+  "mounts": [
+    "source=${localEnv:HOME}/.gitconfig,target=/root/.gitconfig,type=bind,consistency=delegated"
+  ]
+}

@@ -37,7 +37,7 @@ tasks:
     desc: Install frontend dependencies
     dir: frontend
     cmds:
-      - npm install
+      - npm install --no-audit
     sources:
       - frontend/package.json
       - frontend/package-lock.json
