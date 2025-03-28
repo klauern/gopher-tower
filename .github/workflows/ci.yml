@@ -43,6 +43,9 @@ jobs:
       - name: Install dependencies
         run: task deps
 
+      - name: Prepare frontend assets
+        run: task prepare:test:assets
+
       - name: Run tests with coverage
         run: |
           task go:test:coverage
