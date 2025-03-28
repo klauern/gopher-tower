@@ -18,17 +18,14 @@ import (
 	_ "modernc.org/sqlite"
 )
 
-//go:embed schema.sql
-var schema string
-
 type Event struct {
 	Type    string      `json:"type"`
 	Payload interface{} `json:"payload"`
 }
 
-func initializeDatabase(db *sql.DB) error {
+func initializeDatabase(dbConn *sql.DB) error {
 	// Execute schema
-	if _, err := db.Exec(schema); err != nil {
+	if _, err := dbConn.Exec(db.Schema); err != nil {
 		return fmt.Errorf("failed to execute schema: %w", err)
 	}
 

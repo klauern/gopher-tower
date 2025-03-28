@@ -127,7 +127,7 @@ tasks:
 
   go:test:
     desc: Run Go tests
-    deps: [go:deps, go:generate]
+    deps: [go:deps, go:generate, prepare:test:assets]
     cmds:
       - go test -v ./...
 
@@ -153,6 +153,14 @@ tasks:
     desc: Copy schema file to cmd directory
     cmds:
       - cp db/schema.sql cmd/schema.sql
+
+  prepare:test:assets:
+    desc: Prepare assets required for Go tests
+    deps: [frontend:build]
+    cmds:
+      - mkdir -p internal/static/frontend
+      - cp -r frontend/out/* internal/static/frontend/
+      - cp db/schema.sql internal/db/schema.sql
 
   # CLI Tasks
   cli:build:
