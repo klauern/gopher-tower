@@ -116,7 +116,12 @@ describe('JobDetail', () => {
     render(<JobDetail jobId="1" onBack={mockOnBack} />);
 
     await waitFor(() => {
-      expect(screen.getByText(/Mar 23, 2024/)).toBeInTheDocument();
+      // Check that the created date text contains both the label and the formatted date
+      expect(screen.getByText(/Created: Mar 23, 2024, 12:00 AM/)).toBeInTheDocument();
+
+      // Check start and end dates
+      expect(screen.getByText('Mar 23, 2024, 12:00 AM')).toBeInTheDocument(); // Start date
+      expect(screen.getByText('Mar 24, 2024, 12:00 AM')).toBeInTheDocument(); // End date
     });
   });
 });
