@@ -2,72 +2,69 @@
 
 ## Build & Test Commands
 
-- **Frontend Dev**: `task frontend:dev` or `cd frontend && npm run dev`
-- **Backend Dev**: `task go:run` or `go run ./cmd/main.go`
-- **Full Dev Environment**: `task dev` (runs both frontend and backend)
+- **Dev Environment**: `task dev` (runs both frontend and backend), `task frontend:dev`, `task go:dev`
+- **Build**: `task build` (or `task go:build` / `task frontend:build`); use `task embedded` for single binary
 - **Lint**: `task lint` (or `task go:lint` / `task frontend:lint`)
+- **Format**: `task fmt` (or `task go:fmt` / `task frontend:fmt`)
 - **Test**: `task test` (or `task go:test` / `task frontend:test`)
-- **Test Watch Mode**: `task test:watch` (or `task frontend:test:watch`)
-- **Test with Coverage**: `task test:coverage` (or `task frontend:test:coverage`)
-- **Test with UI**: `task frontend:test:ui`
-- **Build**: `task build` (or `task go:build` / `task frontend:build`)
-- **Single Go test**: `go test ./path/to/package -v -run TestName`
-- **Embedded Build**: `task embedded` (builds single binary with frontend embedded)
-- **Run Embedded**: `task run:embedded` (builds and runs embedded application)
+- **Single Frontend Test**: `cd frontend && npm run test -- -t "test name pattern"`
+- **Single Go Test**: `go test ./path/to/package -v -run TestName`
+- **Test Coverage**: `task test:coverage` (or `task go:test:coverage` / `task frontend:test:coverage`)
+
+## Development Environment
+
+### DevContainer Setup
+- Project includes VS Code DevContainer configuration for consistent development
+- Key extensions pre-configured:
+  - Go tools and language server
+  - ESLint and Prettier for TypeScript/JavaScript
+  - Tailwind CSS support
+  - TypeScript and React tools
+  - GitHub Copilot and GitLens
+- Features enabled:
+  - Git and GitHub CLI integration
+  - Latest Go version
+- Automatic port forwarding: 3000 (frontend) and 8080 (backend)
+- Dependencies installed automatically via `task deps`
+- Git configuration mounted from host system
+- Workspace mounted with delegated consistency for better performance
+- Lefthook installed automatically for Git hooks
+- Cursor server workspace storage configured
+
+### Git Hooks with Lefthook
+- Lefthook is automatically installed in the development container
+- Provides pre-commit and pre-push hooks for:
+  - Code formatting checks
+  - Linting
+  - Type checking
+  - Test execution
+- Configure hooks in `lefthook.yml` at project root
 
 ## Architecture Overview
 
-This project uses a static site architecture where:
-
-- Frontend is built as a fully static Next.js application
-- All components MUST be client components (marked with 'use client')
-- No server-side rendering or server components are used
-- Frontend is embedded and served by the Go backend
-- API calls use relative URLs that are resolved against the running server
-
-## Next.js 15 Important Notes
-
-- **Route Parameters**: In Next.js 15, route parameters (`params`) are now Promises and must be unwrapped using `React.use()`:
-
-  ```typescript
-  // Correct way to handle route params in Next.js 15
-  import { use } from 'react';
-
-  export default function Page({ params }: { params: Promise<{ id: string }> }) {
-    const resolvedParams = use(params);
-    // Now you can safely use resolvedParams.id
-  }
-  ```
-
-- Direct access to `params` properties (e.g., `params.id`) will trigger warnings and will be deprecated in future versions
+- Go backend + Next.js 15 frontend with Tailwind and TypeScript
+- Frontend is built as a fully static site, embedded and served by Go backend
+- All React components MUST use 'use client' directive (client components only)
+- Plugin framework allows running various job types (CLI tools, Python scripts)
 
 ## Code Style Guidelines
 
-- **Go**: Follow standard Go conventions (gofmt)
-  - Error handling: Always check errors and provide context
-  - Types: Use strong typing with meaningful names
-  - Imports: Group standard lib, external, then internal
-  - Use embed package for including frontend assets
+### Go
+- Follow standard Go conventions with `gofmt`
+- Error handling: Always check errors and provide context with `fmt.Errorf("context: %w", err)`
+- Types: Strong typing with meaningful names; use interfaces for abstractions
+- Imports: Group standard lib, external, then internal packages
+- Tests: Located next to implementation files with detailed table-driven tests
 
-- **Frontend (TypeScript/React)**:
-  - Use TypeScript interfaces/types for all components
-  - Prefer functional components with hooks
-  - Follow ESLint rules from next/core-web-vitals
-  - Use Tailwind for styling
-  - ALL components must be client components with 'use client' directive
-  - Base URLs for API endpoints are determined at runtime from window.location
-  - Environment variables (like NEXT_PUBLIC_API_BASE_URL) can override the base URL
+### Frontend (TypeScript/React)
+- Use TypeScript for all code with proper interfaces/types
+- Components: Client-side only with 'use client' directive
+- Styling: Tailwind CSS following the component patterns in `frontend/components/ui`
+- Tests: Using Vitest + React Testing Library in `__tests__` directories or next to components
+- API endpoints: Use relative URLs, determined at runtime from window.location
 
-## Testing
-
-- **Frontend Testing**: Uses Vitest with React Testing Library
-  - Test files should be placed in `app/__tests__` directory or next to components
-  - Test files should be named with `.test.tsx` or `.test.ts` extension
-  - See `frontend/TESTING.md` for detailed documentation and examples
-  - Run tests with `bun run test` or `task frontend:test`
-
-- **Backend Testing**: Uses Go's standard testing package
-  - Tests are located next to the code they test
-  - Run tests with `go test ./...` or `task go:test`
-
-This project combines a Go backend (SSE server) with a Next.js frontend using App Router and TypeScript. The frontend is built as a static site and embedded into the Go binary for production deployment. During development, they can run as separate processes for faster iteration.
+## Plugin Framework
+- Plugin system supports multiple job execution engines (CLI tools, Python scripts)
+- Plugins implement the Plugin interface with Name(), Execute(), Validate(), etc.
+- New plugins should follow security best practices, including validation and resource control
+- See `docs/PLUGIN_FRAMEWORK.md` for detailed implementation information

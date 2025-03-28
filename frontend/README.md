@@ -1,4 +1,4 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+This is a [Next.js](https://nextjs.org) project using the Pages Router architecture.
 
 ## Getting Started
 
@@ -16,9 +16,46 @@ bun dev
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+You can start editing the page by modifying `pages/index.tsx`. The page auto-updates as you edit the file.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Project Structure
+
+```
+frontend/
+  ├── pages/             # Pages Router directory
+  │   ├── _app.tsx      # Root component
+  │   ├── _document.tsx # Custom document
+  │   └── index.tsx     # Main page
+  ├── styles/           # Global styles
+  ├── components/       # Reusable components
+  ├── hooks/           # Custom React hooks
+  ├── utils/           # Utility functions
+  ├── types/           # TypeScript types
+  ├── lib/            # Shared libraries
+  └── public/         # Static assets
+```
+
+## Testing
+
+Run the test suite:
+
+```bash
+npm test
+```
+
+For test coverage:
+
+```bash
+npm run test:coverage
+```
+
+## Build
+
+To create a production build:
+
+```bash
+npm run build
+```
 
 ## Learn More
 

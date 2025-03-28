@@ -18,17 +18,14 @@ import (
 	_ "modernc.org/sqlite"
 )
 
-//go:embed schema.sql
-var schema string
-
 type Event struct {
 	Type    string      `json:"type"`
 	Payload interface{} `json:"payload"`
 }
 
-func initializeDatabase(db *sql.DB) error {
+func initializeDatabase(dbConn *sql.DB) error {
 	// Execute schema
-	if _, err := db.Exec(schema); err != nil {
+	if _, err := dbConn.Exec(db.Schema); err != nil {
 		return fmt.Errorf("failed to execute schema: %w", err)
 	}
 
@@ -90,21 +87,9 @@ func main() {
 		})
 	})
 	jobHandler.RegisterRoutes(apiRouter)
-	router.Mount("/api", apiRouter)
 
-	// Handle SSE endpoint
-	router.HandleFunc("/events", func(w http.ResponseWriter, r *http.Request) {
-		// Set CORS headers for all responses
-		w.Header().Set("Access-Control-Allow-Origin", "*")
-		w.Header().Set("Access-Control-Allow-Methods", "GET, OPTIONS")
-		w.Header().Set("Access-Control-Allow-Headers", "*")
-
-		// Handle preflight
-		if r.Method == "OPTIONS" {
-			w.WriteHeader(http.StatusOK)
-			return
-		}
-
+	// Handle SSE endpoint under /api
+	apiRouter.HandleFunc("/events", func(w http.ResponseWriter, r *http.Request) {
 		// Only allow GET requests for SSE
 		if r.Method != "GET" {
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -113,6 +98,8 @@ func main() {
 
 		handleSSE(w, r)
 	})
+
+	router.Mount("/api", apiRouter)
 
 	// For everything else, use the file server
 	router.Handle("/*", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -134,12 +121,20 @@ func main() {
 }
 
 func handleSSE(w http.ResponseWriter, r *http.Request) {
+	// Only allow GET requests for SSE
+	if r.Method != "GET" {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
 	log.Printf("New client connected from %s\n", r.RemoteAddr)
 
 	// Set headers for SSE
 	w.Header().Set("Content-Type", "text/event-stream")
 	w.Header().Set("Cache-Control", "no-cache")
 	w.Header().Set("Connection", "keep-alive")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 	w.Header().Set("X-Accel-Buffering", "no") // Disable buffering in Nginx if present
 
 	// Ensure the connection supports flushing
@@ -150,21 +145,30 @@ func handleSSE(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Send an initial comment to establish connection
+	fmt.Fprintf(w, "retry: 1000\n") // Tell client to retry every 1 second
 	fmt.Fprintf(w, ": ping\n\n")
 	flusher.Flush()
 
 	// Create a channel to notify of client disconnect
-	notify := r.Context().Done()
+	ctx := r.Context()
 
 	// Send events every second
 	ticker := time.NewTicker(1 * time.Second)
 	defer ticker.Stop()
 
-	counter := 0
-	for {
-		select {
-		case <-notify:
+	// Keep track of connection state
+	connected := true
+	defer func() {
+		if connected {
 			log.Printf("Client %s disconnected\n", r.RemoteAddr)
+		}
+	}()
+
+	counter := 0
+	for connected {
+		select {
+		case <-ctx.Done():
+			connected = false
 			return
 		case <-ticker.C:
 			counter++
@@ -208,11 +212,17 @@ func handleSSE(w http.ResponseWriter, r *http.Request) {
 			// Write and flush
 			if _, err := fmt.Fprint(w, sseData); err != nil {
 				log.Printf("Error writing to client %s: %v\n", r.RemoteAddr, err)
+				connected = false
 				return
 			}
 			flusher.Flush()
 
 			log.Printf("Sent event to %s: %s", r.RemoteAddr, strings.TrimSpace(string(data)))
+
+			// In test mode, exit after sending one event
+			if _, isTest := ctx.Value("test").(bool); isTest {
+				return
+			}
 		}
 	}
 }

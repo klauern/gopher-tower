@@ -1,5 +1,20 @@
+# Frontend build stage
+FROM --platform=$BUILDPLATFORM node:22-alpine AS frontend-builder
+
+WORKDIR /app/frontend
+
+# Install frontend dependencies
+COPY frontend/package*.json ./
+RUN npm install
+
+# Copy frontend source
+COPY frontend/ ./
+
+# Build frontend
+RUN npm run build
+
 # Go build stage
-FROM --platform=$BUILDPLATFORM golang:1.24-alpine AS builder
+FROM --platform=$BUILDPLATFORM golang:1.24-alpine AS backend-builder
 
 WORKDIR /app
 
@@ -13,12 +28,16 @@ RUN go mod download
 # Copy source code
 COPY . .
 
+# Copy built frontend files to be embedded
+COPY --from=frontend-builder /app/frontend/out ./internal/static/frontend/
+
 # Build the application with optimizations for multiple platforms
 ARG TARGETOS
 ARG TARGETARCH
 
 RUN CGO_ENABLED=0 GOOS=${TARGETOS} GOARCH=${TARGETARCH} go build \
   -ldflags="-w -s" \
+  -tags embed \
   -o /app/server \
   ./cmd/main.go
 
@@ -28,7 +47,7 @@ FROM gcr.io/distroless/static:nonroot
 WORKDIR /app
 
 # Copy the binary from builder
-COPY --from=builder /app/server .
+COPY --from=backend-builder /app/server .
 
 EXPOSE 8080
 
