@@ -95,10 +95,11 @@ export function JobDetail({ jobId, onBack }: JobDetailProps) {
         <div className="flex items-center space-x-2">
           <Button
             variant="ghost"
-            size="icon"
             onClick={onBack}
+            className="flex items-center gap-2"
           >
             <ArrowLeft className="h-4 w-4" />
+            <span>Back to Jobs</span>
           </Button>
           <h1 className="text-3xl font-bold">Job Details</h1>
         </div>

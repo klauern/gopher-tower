@@ -1,7 +1,7 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
-import { JobRequest } from '../../../types/jobs.ts';
-import { JobForm } from '../JobForm.tsx';
+import { JobRequest } from '../../../types/jobs';
+import { JobForm } from '../JobForm';
 
 const mockInitialData: JobRequest = {
   name: 'Test Job',
@@ -15,8 +15,8 @@ describe('JobForm', () => {
   it('renders create form by default', () => {
     render(
       <JobForm
-        onClose={() => {}}
-        onSuccess={() => {}}
+        onClose={() => { }}
+        onSuccess={() => { }}
       />
     );
 
@@ -28,8 +28,8 @@ describe('JobForm', () => {
   it('renders edit form with initial data', () => {
     render(
       <JobForm
-        onClose={() => {}}
-        onSuccess={() => {}}
+        onClose={() => { }}
+        onSuccess={() => { }}
         initialData={mockInitialData}
       />
     );
@@ -48,7 +48,7 @@ describe('JobForm', () => {
 
     render(
       <JobForm
-        onClose={() => {}}
+        onClose={() => { }}
         onSuccess={onSuccess}
       />
     );
@@ -77,8 +77,8 @@ describe('JobForm', () => {
     global.fetch = vi.fn().mockRejectedValueOnce(new Error('Failed to create job'));
     render(
       <JobForm
-        onClose={() => {}}
-        onSuccess={() => {}}
+        onClose={() => { }}
+        onSuccess={() => { }}
       />
     );
 
@@ -91,9 +91,9 @@ describe('JobForm', () => {
     fireEvent.click(screen.getByText('Save'));
 
     await waitFor(() => {
-      const errorElement = screen.getByText('Failed to create job');
+      const errorElement = screen.getByText('Failed to create job. Please try again.');
       expect(errorElement).toBeInTheDocument();
-      expect(errorElement).toHaveClass('text-red-600', 'text-sm');
+      expect(errorElement).toHaveClass('text-destructive');
     });
   });
 
@@ -102,7 +102,7 @@ describe('JobForm', () => {
     render(
       <JobForm
         onClose={onClose}
-        onSuccess={() => {}}
+        onSuccess={() => { }}
       />
     );
 

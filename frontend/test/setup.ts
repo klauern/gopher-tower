@@ -1,6 +1,6 @@
 import "@testing-library/jest-dom";
 import { cleanup } from "@testing-library/react";
-import { afterEach, vi } from "vitest";
+import { afterEach, beforeEach, vi } from "vitest";
 
 // Automatically cleanup after each test
 afterEach(() => {
@@ -24,3 +24,23 @@ class MockIntersectionObserver implements IntersectionObserver {
 
 global.IntersectionObserver =
   MockIntersectionObserver as unknown as typeof IntersectionObserver;
+
+// Mock the Radix UI Select components
+vi.mock("@radix-ui/react-select", () => {
+  return import("../test/mocks/select");
+});
+
+// Mock next/navigation
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({
+    push: vi.fn(),
+    back: vi.fn(),
+    forward: vi.fn(),
+  }),
+  usePathname: vi.fn(),
+}));
+
+// Reset all mocks before each test
+beforeEach(() => {
+  vi.clearAllMocks();
+});
