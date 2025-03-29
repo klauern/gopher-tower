@@ -6,6 +6,7 @@ vars:
   GO_MODULE: github.com/klauern/gopher-tower
   GO_FILES: '$(find . -type f -name "*.go" -not -path "./frontend/*")'
   ROOT_DIR: "{{.TASKFILE_DIR}}"
+  FRONTEND_DIST: internal/static/frontend # Frontend distribution directory
 
 tasks:
   default:
@@ -17,20 +18,29 @@ tasks:
       - task --list
     silent: true
 
-  deps:
-    desc: Install all project dependencies (Go and frontend)
-    cmds:
-      - task: go:deps
-      - task: frontend:install
-    silent: true
-
   clean:
     desc: Clean up build artifacts and temporary files
     cmds:
-      - rm -rf gopher-tower gopher-tower-embedded
-      - rm -rf internal/static/frontend
+      - rm -rf gopher-tower
+      - rm -rf {{.FRONTEND_DIST}}
       - rm -rf frontend/.next frontend/out
       - rm -f cmd/schema.sql
+      - rm -f internal/db/schema.sql
+
+  # Shared preparation tasks
+  prepare:frontend:
+    desc: Build and prepare frontend files for embedding
+    cmds:
+      - task: frontend:build
+      - mkdir -p {{.FRONTEND_DIST}}
+      - cp -r frontend/out/* {{.FRONTEND_DIST}}/
+
+  prepare:schema:
+    desc: Copy schema files to required locations
+    cmds:
+      - mkdir -p cmd internal/db
+      - cp db/schema.sql cmd/schema.sql
+      - cp db/schema.sql internal/db/schema.sql
 
   # Frontend Tasks
   frontend:install:
@@ -44,18 +54,18 @@ tasks:
     generates:
       - frontend/node_modules/**/*
 
-  frontend:dev:
-    desc: Start frontend development server
-    dir: frontend
-    cmds:
-      - npm run dev
-    deps: [frontend:install]
-
   frontend:build:
     desc: Build frontend for production
     dir: frontend
     cmds:
       - npm run build
+    deps: [frontend:install]
+
+  frontend:dev:
+    desc: Start frontend development server
+    dir: frontend
+    cmds:
+      - npm run dev
     deps: [frontend:install]
 
   frontend:test:
@@ -70,13 +80,6 @@ tasks:
     dir: frontend
     cmds:
       - npm run test:watch
-    deps: [frontend:install]
-
-  frontend:test:ui:
-    desc: Run frontend tests with UI
-    dir: frontend
-    cmds:
-      - npm run test:ui
     deps: [frontend:install]
 
   frontend:test:coverage:
@@ -101,42 +104,35 @@ tasks:
     deps: [frontend:install]
 
   # Go Tasks
-  go:generate:
-    desc: Generate Go code (mocks, etc.)
-    deps: [go:deps]
-    cmds:
-      - go generate ./...
-
   go:deps:
     desc: Install Go dependencies
     cmds:
       - go mod download
       - go mod tidy
 
+  go:generate:
+    desc: Generate Go code (mocks, etc.)
+    deps: [go:deps]
+    cmds:
+      - go generate ./...
+
   go:build:
     desc: Build Go application
-    deps: [go:deps, go:generate, copy:schema]
+    deps: [go:deps, go:generate, prepare:schema]
     cmds:
       - go build -o gopher-tower ./cmd
 
   go:dev:
     desc: Run Go application in development mode
+    deps: [go:deps, go:generate]
     cmds:
       - go run ./cmd/main.go
-    deps: [go:deps, go:generate]
 
   go:test:
     desc: Run Go tests
-    deps: [go:deps, go:generate, prepare:test:assets]
+    deps: [go:deps, go:generate, prepare:schema, prepare:frontend]
     cmds:
       - go test -v ./...
-
-  go:test:coverage:
-    desc: Run Go tests with coverage
-    deps: [go:deps, go:generate]
-    cmds:
-      - go test -v -coverprofile=coverage.out ./...
-      - go tool cover -html=coverage.out
 
   go:lint:
     desc: Lint Go code
@@ -149,62 +145,79 @@ tasks:
     cmds:
       - gofmt -s -w .
 
-  copy:schema:
-    desc: Copy schema file to cmd directory
+  # Main workflow tasks
+  build:
+    desc: Build single binary with embedded frontend assets
     cmds:
-      - cp db/schema.sql cmd/schema.sql
+      - task: clean
+      - task: prepare:frontend
+      - task: prepare:schema
+      - task: go:build
+      - echo "Build completed successfully"
 
-  prepare:test:assets:
-    desc: Prepare assets required for Go tests
-    deps: [frontend:build]
-    cmds:
-      - mkdir -p internal/static/frontend
-      - cp -r frontend/out/* internal/static/frontend/
-      - cp db/schema.sql internal/db/schema.sql
-
-  # CLI Tasks
-  cli:build:
-    desc: Build the CLI tool
-    deps: [go:deps, go:generate]
-    cmds:
-      - go build -o gopher-cli ./cmd/cli
-    sources:
-      - cmd/cli/**/*.go
-      - go.mod
-      - go.sum
-    generates:
-      - gopher-cli
-
-  cli:run:
-    desc: Run the CLI tool
-    deps: [cli:build]
-    cmds:
-      - ./gopher-cli {{.CLI_ARGS}}
-
-  # Combined Tasks
   dev:
     desc: Start development environment (frontend + backend)
     deps: [go:deps, frontend:install]
     cmds:
       - ./scripts/dev.sh
 
+  # Test tasks
   test:
     desc: Run all tests
     cmds:
+      - task: test:go
+      - task: test:frontend
+
+  test:go:
+    desc: Run Go tests
+    cmds:
       - task: go:test
+
+  test:frontend:
+    desc: Run frontend tests
+    cmds:
       - task: frontend:test
 
   test:watch:
     desc: Run all tests in watch mode
     cmds:
-      - task: go:test
+      - task: test:go:watch
+      - task: test:frontend:watch
+
+  test:go:watch:
+    desc: Run Go tests in watch mode
+    cmds:
+      - watchexec -e go "task test:go"
+
+  test:frontend:watch:
+    desc: Run frontend tests in watch mode
+    cmds:
       - task: frontend:test:watch
 
   test:coverage:
     desc: Run all tests with coverage
     cmds:
-      - task: go:test:coverage
+      - task: test:go:coverage
+      - task: test:frontend:coverage
+
+  test:go:coverage:
+    desc: Run Go tests with coverage
+    deps: [go:deps, go:generate]
+    cmds:
+      - go test -v -coverprofile=coverage.out ./...
+      - go tool cover -html=coverage.out
+
+  test:frontend:coverage:
+    desc: Run frontend tests with coverage
+    cmds:
       - task: frontend:test:coverage
+
+  # Format and lint tasks
+  fmt:
+    desc: Format all code
+    cmds:
+      - task: go:fmt
+      - task: frontend:fmt
 
   lint:
     desc: Lint all code
@@ -212,52 +225,11 @@ tasks:
       - task: go:lint
       - task: frontend:lint
 
-  fmt:
-    desc: Format all code
-    cmds:
-      - task: go:fmt
-      - task: frontend:fmt
-
-  build:
-    desc: Build everything for production
-    cmds:
-      - task: clean
-      - task: frontend:build
-      - |
-        # Prepare frontend files for embedding
-        mkdir -p internal/static/frontend
-        cp -r frontend/out/* internal/static/frontend/
-      - task: go:build
-      - echo "Build completed successfully"
-
-  embedded:
-    desc: Build single binary with frontend embedded
-    cmds:
-      - task: clean
-      - task: frontend:build
-      - |
-        # Prepare frontend files for embedding
-        mkdir -p internal/static/frontend
-        cp -r frontend/out/* internal/static/frontend/
-      - go build -o gopher-tower-embedded -tags embed ./cmd
-      - echo "Embedded build completed successfully"
-
-  run:embedded:
-    desc: Build and run embedded application
-    deps: [embedded]
-    cmds:
-      - ./gopher-tower-embedded
-
-  # Docker Tasks
+  # Docker tasks
   docker:prepare:
     desc: Prepare assets for Docker build
+    deps: [prepare:frontend, prepare:schema]
     cmds:
-      - task: clean
-      - task: frontend:build
-      - |
-        # Prepare frontend files for embedding
-        mkdir -p internal/static/frontend
-        cp -r frontend/out/* internal/static/frontend/
       - echo "Docker build preparation completed"
 
   docker:build:
