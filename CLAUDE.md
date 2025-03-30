@@ -44,9 +44,9 @@
 
 ## Architecture Overview
 
-- Go backend + Next.js 15 frontend with Tailwind and TypeScript
-- Frontend is built as a fully static site, embedded and served by Go backend
-- All React components MUST use 'use client' directive (client components only)
+- Go backend + Next.js 15 frontend (using App Router) with Tailwind and TypeScript
+- Frontend is built as a fully static site (`output: 'export'`), embedded and served by the Go backend
+- React components utilize the Next.js App Router model (Server Components by default, Client Components with 'use client')
 - Plugin framework allows running various job types (CLI tools, Python scripts)
 - SQLite database with migration support using golang-migrate
 
@@ -63,10 +63,10 @@
 ### Frontend (TypeScript/React)
 
 - Use TypeScript for all code with proper interfaces/types
-- Components: Client-side only with 'use client' directive
+- Components: Follow Next.js App Router conventions (Server and Client Components).
 - Styling: Tailwind CSS following the component patterns in `frontend/components/ui`
-- Tests: Using Vitest + React Testing Library in `__tests__` directories or next to components
-- API endpoints: Use relative URLs, determined at runtime from window.location
+- Tests: Using Vitest + React Testing Library, typically located in `__tests__` directories alongside components (e.g., `frontend/components/__tests__`) or colocated with `.test.tsx` / `.test.ts` extensions.
+- API endpoints: Use relative URLs (e.g., `/api/jobs`). The Next.js development server proxies `/api/*` requests to the Go backend (see `frontend/next.config.ts`). In production, the Go server handles these directly.
 
 ## Plugin Framework
 

@@ -57,6 +57,12 @@ tasks:
     cmds:
       - ./scripts/lint_schema.sh
 
+  schema:new:
+    desc: Create a new migration
+    interactive: true
+    cmds:
+      - ./scripts/new_migration.sh
+
   # Frontend Tasks
   frontend:install:
     desc: Install frontend dependencies
@@ -174,6 +180,8 @@ tasks:
     desc: Format Go code
     cmds:
       - gofmt -s -w .
+      - go tool goimports -w .
+      - fd -e go | xargs go tool gofumpt -w
 
   # Main workflow tasks
   build:

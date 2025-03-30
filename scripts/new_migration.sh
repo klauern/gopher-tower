@@ -1,13 +1,33 @@
 #!/bin/bash
 set -e
 
-if [ $# -lt 1 ]; then
-  echo "Usage: $0 <migration_name>"
+prompt_migration_name() {
+  local name=""
+  while [ -z "$name" ]; do
+    read -p "Enter migration name (e.g., add_users_table): " name
+    # Remove spaces and special characters, convert to snake_case
+    name=$(echo "$name" | tr '[:upper:]' '[:lower:]' | tr ' ' '_' | sed 's/[^a-z0-9_]//g')
+    if [ -z "$name" ]; then
+      echo "Error: Migration name cannot be empty"
+    fi
+  done
+  echo "$name"
+}
+
+# Get migration name from argument or prompt
+MIGRATION_NAME=""
+if [ $# -ge 1 ]; then
+  MIGRATION_NAME=$1
+else
+  MIGRATION_NAME=$(prompt_migration_name)
+fi
+
+# Validate migration name
+if [[ ! $MIGRATION_NAME =~ ^[a-z0-9_]+$ ]]; then
+  echo "Error: Migration name can only contain lowercase letters, numbers, and underscores"
   exit 1
 fi
 
-# Migration name from argument
-MIGRATION_NAME=$1
 TIMESTAMP=$(date +%Y%m%d%H%M%S)
 MIGRATION_FILE="internal/db/migrations/$(printf '%06d' "$TIMESTAMP")_${MIGRATION_NAME}"
 
@@ -19,6 +39,23 @@ touch "${MIGRATION_FILE}.down.sql"
 echo "Created migration files:"
 echo "  ${MIGRATION_FILE}.up.sql"
 echo "  ${MIGRATION_FILE}.down.sql"
+
+# Prompt for migration content
+read -p "Would you like to edit the migration files now? [Y/n] " -n 1 -r
+echo
+if [[ $REPLY =~ ^[Yy]$ ]] || [[ -z $REPLY ]]; then
+  # Try to use the user's preferred editor
+  EDITOR=${EDITOR:-$(which vim || which nano || which vi)}
+  if [ -n "$EDITOR" ]; then
+    $EDITOR "${MIGRATION_FILE}.up.sql"
+    echo "Now edit the down migration..."
+    $EDITOR "${MIGRATION_FILE}.down.sql"
+  else
+    echo "No text editor found. Please edit the files manually:"
+    echo "  ${MIGRATION_FILE}.up.sql"
+    echo "  ${MIGRATION_FILE}.down.sql"
+  fi
+fi
 
 cat <<"EOF"
 
