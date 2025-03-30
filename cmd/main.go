@@ -5,7 +5,6 @@ import (
 	_ "embed"
 	"encoding/json"
 	"fmt"
-	"io/fs"
 	"log"
 	"net/http"
 	"os"
@@ -19,7 +18,6 @@ import (
 	"github.com/klauern/gopher-tower/internal/db"
 	"github.com/klauern/gopher-tower/internal/db/migrate"
 	"github.com/klauern/gopher-tower/internal/db/migrations"
-	"github.com/klauern/gopher-tower/internal/static"
 	_ "modernc.org/sqlite"
 )
 
@@ -121,7 +119,6 @@ func main() {
 		jobHandler.RegisterRoutes(r)
 		r.Get("/events", handleSSE) // Keep SSE handler under /api
 	})
-
 
 	// --- Serve Static Frontend Files ---
 	// Determine the directory where the frontend build output lives
