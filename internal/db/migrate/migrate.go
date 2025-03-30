@@ -3,19 +3,28 @@ package migrate
 import (
 	"errors"
 	"fmt"
+	"io/fs"
 	"log"
 
 	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/sqlite3"
-	_ "github.com/golang-migrate/migrate/v4/source/file"
+	"github.com/golang-migrate/migrate/v4/source/iofs"
 )
 
-// MigrateDB performs database migrations
-func MigrateDB(dbPath string, migrationsPath string) error {
-	migrationsDSN := fmt.Sprintf("file://%s", migrationsPath)
-	dbDSN := fmt.Sprintf("sqlite3://%s", dbPath)
+// FS is an interface that both embed.FS and testing filesystems can implement
+type FS interface {
+	fs.FS
+}
 
-	m, err := migrate.New(migrationsDSN, dbDSN)
+// MigrateDB performs database migrations
+func MigrateDB(dbPath string, migrations FS) error {
+	d, err := iofs.New(migrations, ".")
+	if err != nil {
+		return fmt.Errorf("error creating migration source: %w", err)
+	}
+
+	dbDSN := fmt.Sprintf("sqlite3://%s", dbPath)
+	m, err := migrate.NewWithSourceInstance("iofs", d, dbDSN)
 	if err != nil {
 		return fmt.Errorf("error creating migrate instance: %w", err)
 	}
@@ -35,11 +44,14 @@ func MigrateDB(dbPath string, migrationsPath string) error {
 }
 
 // RollbackDB rolls back the last migration
-func RollbackDB(dbPath string, migrationsPath string) error {
-	migrationsDSN := fmt.Sprintf("file://%s", migrationsPath)
-	dbDSN := fmt.Sprintf("sqlite3://%s", dbPath)
+func RollbackDB(dbPath string, migrations FS) error {
+	d, err := iofs.New(migrations, ".")
+	if err != nil {
+		return fmt.Errorf("error creating migration source: %w", err)
+	}
 
-	m, err := migrate.New(migrationsDSN, dbDSN)
+	dbDSN := fmt.Sprintf("sqlite3://%s", dbPath)
+	m, err := migrate.NewWithSourceInstance("iofs", d, dbDSN)
 	if err != nil {
 		return fmt.Errorf("error creating migrate instance: %w", err)
 	}
@@ -59,11 +71,14 @@ func RollbackDB(dbPath string, migrationsPath string) error {
 }
 
 // GetMigrationVersion returns the current migration version
-func GetMigrationVersion(dbPath string, migrationsPath string) (uint, bool, error) {
-	migrationsDSN := fmt.Sprintf("file://%s", migrationsPath)
-	dbDSN := fmt.Sprintf("sqlite3://%s", dbPath)
+func GetMigrationVersion(dbPath string, migrations FS) (uint, bool, error) {
+	d, err := iofs.New(migrations, ".")
+	if err != nil {
+		return 0, false, fmt.Errorf("error creating migration source: %w", err)
+	}
 
-	m, err := migrate.New(migrationsDSN, dbDSN)
+	dbDSN := fmt.Sprintf("sqlite3://%s", dbPath)
+	m, err := migrate.NewWithSourceInstance("iofs", d, dbDSN)
 	if err != nil {
 		return 0, false, fmt.Errorf("error creating migrate instance: %w", err)
 	}

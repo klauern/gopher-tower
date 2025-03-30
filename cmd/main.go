@@ -15,6 +15,7 @@ import (
 	"github.com/klauern/gopher-tower/internal/api/jobs"
 	"github.com/klauern/gopher-tower/internal/db"
 	"github.com/klauern/gopher-tower/internal/db/migrate"
+	"github.com/klauern/gopher-tower/internal/migrations"
 	"github.com/klauern/gopher-tower/internal/static"
 	_ "modernc.org/sqlite"
 )
@@ -56,7 +57,7 @@ func main() {
 	}
 
 	// Run database migrations
-	if err := migrate.MigrateDB("gopher-tower.db", "db/migrations"); err != nil {
+	if err := migrate.MigrateDB("gopher-tower.db", migrations.Files); err != nil {
 		log.Fatalf("Failed to run migrations: %v", err)
 	}
 

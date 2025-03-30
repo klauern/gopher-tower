@@ -1,6 +1,6 @@
 ---
 description: Project Layout
-globs: 
+globs:
 alwaysApply: false
 ---
 - This is an application that uses both Golang and NextJS 15
