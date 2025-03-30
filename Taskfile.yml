@@ -180,6 +180,8 @@ tasks:
     desc: Format Go code
     cmds:
       - gofmt -s -w .
+      - go tool goimports -w .
+      - fd -e go | xargs go tool gofumpt -w
 
   # Main workflow tasks
   build:

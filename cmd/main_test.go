@@ -3,7 +3,6 @@ package main
 import (
 	"bufio"
 	"context"
-	"database/sql"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -14,27 +13,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
-
-func TestInitializeDatabase(t *testing.T) {
-	// Create an in-memory SQLite database for testing
-	db, err := sql.Open("sqlite", ":memory:")
-	require.NoError(t, err)
-	defer db.Close()
-
-	// Test database initialization
-	err = initializeDatabase(db)
-	require.NoError(t, err)
-
-	// Verify that tables were created by trying to insert and query data
-	_, err = db.Exec(`INSERT INTO jobs (name, description, status) VALUES (?, ?, ?)`,
-		"Test Job", "Test Description", "pending")
-	require.NoError(t, err)
-
-	var count int
-	err = db.QueryRow("SELECT COUNT(*) FROM jobs").Scan(&count)
-	require.NoError(t, err)
-	assert.Equal(t, 1, count)
-}
 
 func TestHandleSSE(t *testing.T) {
 	tests := []struct {

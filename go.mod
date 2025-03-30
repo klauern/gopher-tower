@@ -7,6 +7,7 @@ tool (
 	github.com/pressly/goose/v3/cmd/goose
 	github.com/sqlc-dev/sqlc/cmd/sqlc
 	go.uber.org/mock/mockgen
+	golang.org/x/tools/cmd/goimports
 	mvdan.cc/gofumpt
 )
 

@@ -5,7 +5,6 @@ import (
 	_ "embed"
 	"encoding/json"
 	"fmt"
-	"io/fs"
 	"log"
 	"net/http"
 	"os"
@@ -19,7 +18,6 @@ import (
 	"github.com/klauern/gopher-tower/internal/db"
 	"github.com/klauern/gopher-tower/internal/db/migrate"
 	"github.com/klauern/gopher-tower/internal/db/migrations"
-	"github.com/klauern/gopher-tower/internal/static"
 	_ "modernc.org/sqlite"
 )
 
@@ -51,15 +49,6 @@ type Event struct {
 	Payload interface{} `json:"payload"`
 }
 
-func initializeDatabase(dbConn *sql.DB) error {
-	// Execute schema
-	if _, err := dbConn.Exec(db.Schema); err != nil {
-		return fmt.Errorf("failed to execute schema: %w", err)
-	}
-
-	return nil
-}
-
 func main() {
 	// Initialize SQLite database
 	dbConn, err := sql.Open("sqlite", "gopher-tower.db")
@@ -76,11 +65,6 @@ func main() {
 	// Run database migrations
 	if err := migrate.MigrateDB("gopher-tower.db", migrations.Files); err != nil {
 		log.Fatalf("Failed to run migrations: %v", err)
-	}
-
-	// Initialize database schema
-	if err := initializeDatabase(dbConn); err != nil {
-		log.Fatalf("Failed to initialize database: %v", err)
 	}
 
 	// Create database queries
@@ -121,7 +105,6 @@ func main() {
 		jobHandler.RegisterRoutes(r)
 		r.Get("/events", handleSSE) // Keep SSE handler under /api
 	})
-
 
 	// --- Serve Static Frontend Files ---
 	// Determine the directory where the frontend build output lives
