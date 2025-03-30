@@ -57,6 +57,12 @@ tasks:
     cmds:
       - ./scripts/lint_schema.sh
 
+  schema:new:
+    desc: Create a new migration
+    interactive: true
+    cmds:
+      - ./scripts/new_migration.sh
+
   # Frontend Tasks
   frontend:install:
     desc: Install frontend dependencies

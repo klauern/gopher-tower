@@ -19,7 +19,7 @@ alwaysApply: false
 - We use Taskfile.yml for common tasks.  New tasks will be added to it to document and outline what new common tasks we can use.
 - Use [CLAUDE.md](mdc:CLAUDE.md) to reference the project in more detail.
 - Testing:
-  - Frontend tests are in `frontend/app/__tests__` directory
-  - Test files use `.test.tsx` or `.test.ts` extension
-  - Run tests with `task frontend:test` or other test commands
-  - See `frontend/TESTING.md` for detailed documentation
+  - Frontend tests are typically located alongside components, often within `__tests__` subdirectories (e.g., `frontend/components/__tests__`).
+  - Test files use `.test.tsx` or `.test.ts` extension.
+  - Run tests with `task frontend:test` or other test commands listed in `CLAUDE.md`.
+  - See `frontend/TESTING.md` for detailed documentation (if available).
