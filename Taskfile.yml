@@ -43,8 +43,19 @@ tasks:
     desc: Handle database schema setup
     cmds:
       - mkdir -p internal/db/migrations
+      - task: schema:generate
     deps:
       - go:generate
+
+  schema:generate:
+    desc: Generate canonical schema.sql from migrations
+    cmds:
+      - ./scripts/generate_schema.sh
+
+  schema:check:
+    desc: Verify schema.sql is in sync with migrations
+    cmds:
+      - ./scripts/lint_schema.sh
 
   # Frontend Tasks
   frontend:install:
@@ -228,6 +239,7 @@ tasks:
     cmds:
       - task: go:lint
       - task: frontend:lint
+      - task: schema:check
 
   # Docker tasks
   docker:prepare:
