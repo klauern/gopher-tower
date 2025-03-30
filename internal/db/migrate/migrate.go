@@ -18,6 +18,7 @@ type FS interface {
 
 // MigrateDB performs database migrations
 func MigrateDB(dbPath string, migrations FS) error {
+	// We use "." as the root of the migrations
 	d, err := iofs.New(migrations, ".")
 	if err != nil {
 		return fmt.Errorf("error creating migration source: %w", err)

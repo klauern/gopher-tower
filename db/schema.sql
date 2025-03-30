@@ -1,4 +1,13 @@
-CREATE TABLE IF NOT EXISTS tasks (
+-- Database schema for Gopher Tower
+-- AUTOMATICALLY GENERATED FROM MIGRATIONS
+-- DO NOT EDIT DIRECTLY
+--
+-- Generated: Sat Mar 29 20:20:14 CDT 2025
+--
+-- This schema is used by sqlc to generate Go code
+-- for database operations
+
+CREATE TABLE tasks (
   id TEXT PRIMARY KEY,
   title TEXT NOT NULL,
   description TEXT,
@@ -12,12 +21,10 @@ CREATE TABLE IF NOT EXISTS tasks (
   FOREIGN KEY (user_id) REFERENCES users(id),
   FOREIGN KEY (job_id) REFERENCES jobs(id)
 );
-
-CREATE INDEX IF NOT EXISTS idx_tasks_status ON tasks(status);
-CREATE INDEX IF NOT EXISTS idx_tasks_user_id ON tasks(user_id);
-CREATE INDEX IF NOT EXISTS idx_tasks_job_id ON tasks(job_id);
-
-CREATE TABLE IF NOT EXISTS jobs (
+CREATE INDEX idx_tasks_status ON tasks(status);
+CREATE INDEX idx_tasks_user_id ON tasks(user_id);
+CREATE INDEX idx_tasks_job_id ON tasks(job_id);
+CREATE TABLE jobs (
   id TEXT PRIMARY KEY,
   name TEXT NOT NULL,
   description TEXT,
@@ -29,11 +36,9 @@ CREATE TABLE IF NOT EXISTS jobs (
   owner_id TEXT,
   FOREIGN KEY (owner_id) REFERENCES users(id)
 );
-
-CREATE INDEX IF NOT EXISTS idx_jobs_status ON jobs(status);
-CREATE INDEX IF NOT EXISTS idx_jobs_owner_id ON jobs(owner_id);
-
-CREATE TABLE IF NOT EXISTS users (
+CREATE INDEX idx_jobs_status ON jobs(status);
+CREATE INDEX idx_jobs_owner_id ON jobs(owner_id);
+CREATE TABLE users (
   id TEXT PRIMARY KEY,
   username TEXT NOT NULL UNIQUE,
   email TEXT NOT NULL UNIQUE,
@@ -44,12 +49,10 @@ CREATE TABLE IF NOT EXISTS users (
   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   last_login TIMESTAMP
 );
-
-CREATE INDEX IF NOT EXISTS idx_users_username ON users(username);
-CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
-CREATE INDEX IF NOT EXISTS idx_users_role ON users(role);
-
-CREATE TABLE IF NOT EXISTS comments (
+CREATE INDEX idx_users_username ON users(username);
+CREATE INDEX idx_users_email ON users(email);
+CREATE INDEX idx_users_role ON users(role);
+CREATE TABLE comments (
   id TEXT PRIMARY KEY,
   content TEXT NOT NULL,
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -59,11 +62,9 @@ CREATE TABLE IF NOT EXISTS comments (
   FOREIGN KEY (user_id) REFERENCES users(id),
   FOREIGN KEY (task_id) REFERENCES tasks(id)
 );
-
-CREATE INDEX IF NOT EXISTS idx_comments_user_id ON comments(user_id);
-CREATE INDEX IF NOT EXISTS idx_comments_task_id ON comments(task_id);
-
-CREATE TABLE IF NOT EXISTS attachments (
+CREATE INDEX idx_comments_user_id ON comments(user_id);
+CREATE INDEX idx_comments_task_id ON comments(task_id);
+CREATE TABLE attachments (
   id TEXT PRIMARY KEY,
   filename TEXT NOT NULL,
   file_path TEXT NOT NULL,
@@ -75,11 +76,9 @@ CREATE TABLE IF NOT EXISTS attachments (
   FOREIGN KEY (task_id) REFERENCES tasks(id),
   FOREIGN KEY (job_id) REFERENCES jobs(id)
 );
-
-CREATE INDEX IF NOT EXISTS idx_attachments_task_id ON attachments(task_id);
-CREATE INDEX IF NOT EXISTS idx_attachments_job_id ON attachments(job_id);
-
-CREATE TABLE IF NOT EXISTS notifications (
+CREATE INDEX idx_attachments_task_id ON attachments(task_id);
+CREATE INDEX idx_attachments_job_id ON attachments(job_id);
+CREATE TABLE notifications (
   id TEXT PRIMARY KEY,
   type TEXT NOT NULL,
   content TEXT NOT NULL,
@@ -90,12 +89,10 @@ CREATE TABLE IF NOT EXISTS notifications (
   reference_type TEXT,
   FOREIGN KEY (user_id) REFERENCES users(id)
 );
-
-CREATE INDEX IF NOT EXISTS idx_notifications_user_id ON notifications(user_id);
-CREATE INDEX IF NOT EXISTS idx_notifications_is_read ON notifications(is_read);
-CREATE INDEX IF NOT EXISTS idx_notifications_reference ON notifications(reference_id, reference_type);
-
-CREATE TABLE IF NOT EXISTS activity_logs (
+CREATE INDEX idx_notifications_user_id ON notifications(user_id);
+CREATE INDEX idx_notifications_is_read ON notifications(is_read);
+CREATE INDEX idx_notifications_reference ON notifications(reference_id, reference_type);
+CREATE TABLE activity_logs (
   id TEXT PRIMARY KEY,
   action TEXT NOT NULL,
   entity_type TEXT NOT NULL,
@@ -105,6 +102,5 @@ CREATE TABLE IF NOT EXISTS activity_logs (
   user_id TEXT NOT NULL,
   FOREIGN KEY (user_id) REFERENCES users(id)
 );
-
-CREATE INDEX IF NOT EXISTS idx_activity_logs_entity ON activity_logs(entity_type, entity_id);
-CREATE INDEX IF NOT EXISTS idx_activity_logs_user_id ON activity_logs(user_id);
+CREATE INDEX idx_activity_logs_entity ON activity_logs(entity_type, entity_id);
+CREATE INDEX idx_activity_logs_user_id ON activity_logs(user_id);

@@ -99,3 +99,4 @@ jobs:
         run: |
           task go:lint
           task frontend:lint
+          task schema:check

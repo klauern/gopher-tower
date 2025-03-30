@@ -5,8 +5,8 @@ import (
 	_ "embed"
 )
 
-//go:embed schema.sql
+//go:embed migrations/000001_init_schema.up.sql
 var Schema string
 
-//go:embed migrate/migrations/*.sql
+//go:embed migrations/*.sql
 var Migrations embed.FS
