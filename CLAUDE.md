@@ -14,6 +14,7 @@
 ## Development Environment
 
 ### DevContainer Setup
+
 - Project includes VS Code DevContainer configuration for consistent development
 - Key extensions pre-configured:
   - Go tools and language server
@@ -32,6 +33,7 @@
 - Cursor server workspace storage configured
 
 ### Git Hooks with Lefthook
+
 - Lefthook is automatically installed in the development container
 - Provides pre-commit and pre-push hooks for:
   - Code formatting checks
@@ -46,10 +48,12 @@
 - Frontend is built as a fully static site, embedded and served by Go backend
 - All React components MUST use 'use client' directive (client components only)
 - Plugin framework allows running various job types (CLI tools, Python scripts)
+- SQLite database with migration support using golang-migrate
 
 ## Code Style Guidelines
 
 ### Go
+
 - Follow standard Go conventions with `gofmt`
 - Error handling: Always check errors and provide context with `fmt.Errorf("context: %w", err)`
 - Types: Strong typing with meaningful names; use interfaces for abstractions
@@ -57,6 +61,7 @@
 - Tests: Located next to implementation files with detailed table-driven tests
 
 ### Frontend (TypeScript/React)
+
 - Use TypeScript for all code with proper interfaces/types
 - Components: Client-side only with 'use client' directive
 - Styling: Tailwind CSS following the component patterns in `frontend/components/ui`
@@ -64,7 +69,17 @@
 - API endpoints: Use relative URLs, determined at runtime from window.location
 
 ## Plugin Framework
+
 - Plugin system supports multiple job execution engines (CLI tools, Python scripts)
 - Plugins implement the Plugin interface with Name(), Execute(), Validate(), etc.
 - New plugins should follow security best practices, including validation and resource control
 - See `docs/PLUGIN_FRAMEWORK.md` for detailed implementation information
+
+## Database Migrations
+
+- Uses `golang-migrate` for database schema versioning and migrations
+- Migration files are stored in `internal/db/migrations`
+- Migrations are automatically run on application startup
+- Migration state is tracked in SQLite database
+- Each migration has an up and down file for forward and rollback changes
+- Migration files follow the format: `{version}_{description}.{up|down}.sql`
