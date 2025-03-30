@@ -110,6 +110,21 @@ tasks:
       - go mod download
       - go mod tidy
 
+  # Adding deps task (used by CI workflows)
+  deps:
+    desc: Install all dependencies
+    deps: [go:deps, frontend:install]
+    cmds:
+      - echo "All dependencies installed successfully"
+
+  # Adding prepare:test:assets for CI
+  prepare:test:assets:
+    desc: Prepare assets for testing
+    deps: [frontend:install]
+    cmds:
+      - mkdir -p {{.FRONTEND_DIST}}
+      - cp -r frontend/public/* {{.FRONTEND_DIST}}/ || true
+
   go:generate:
     desc: Generate Go code (mocks, etc.)
     deps: [go:deps]
@@ -278,3 +293,9 @@ tasks:
     cmds:
       - docker-compose down --rmi local
       - docker system prune -f
+
+  # Alias for CI workflows
+  go:test:coverage:
+    desc: Run Go tests with coverage (alias for test:go:coverage)
+    cmds:
+      - task: test:go:coverage
