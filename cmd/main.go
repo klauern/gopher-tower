@@ -15,7 +15,7 @@ import (
 	"github.com/klauern/gopher-tower/internal/api/jobs"
 	"github.com/klauern/gopher-tower/internal/db"
 	"github.com/klauern/gopher-tower/internal/db/migrate"
-	"github.com/klauern/gopher-tower/internal/migrations"
+	"github.com/klauern/gopher-tower/internal/db/migrations"
 	"github.com/klauern/gopher-tower/internal/static"
 	_ "modernc.org/sqlite"
 )

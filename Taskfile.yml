@@ -35,12 +35,16 @@ tasks:
       - mkdir -p {{.FRONTEND_DIST}}
       - cp -r frontend/out/* {{.FRONTEND_DIST}}/
 
+  prepare:
+    deps:
+      - prepare:frontend
+
   prepare:schema:
-    desc: Copy schema files to required locations
+    desc: Handle database schema setup
     cmds:
-      - mkdir -p cmd internal/db
-      - cp db/schema.sql cmd/schema.sql
-      - cp db/schema.sql internal/db/schema.sql
+      - mkdir -p internal/db/migrations
+    deps:
+      - go:generate
 
   # Frontend Tasks
   frontend:install:
@@ -130,7 +134,7 @@ tasks:
 
   go:test:
     desc: Run Go tests
-    deps: [go:deps, go:generate, prepare:schema, prepare:frontend]
+    deps: [go:deps, go:generate, prepare:schema]
     cmds:
       - go test -v ./...
 
