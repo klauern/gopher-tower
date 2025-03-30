@@ -8,13 +8,13 @@ TEMP_SCHEMA=$(mktemp)
 SCHEMA_FILE="db/schema.sql"
 
 # Run the same generation process as generate_schema.sh but output to temp file
-# Create a header for the schema file
+# Create a header for the schema file with a fixed date to avoid unnecessary changes
 cat >"$TEMP_SCHEMA" <<EOL
 -- Database schema for Gopher Tower
 -- AUTOMATICALLY GENERATED FROM MIGRATIONS
 -- DO NOT EDIT DIRECTLY
 --
--- Generated: $(date)
+-- Generated from migration files
 --
 -- This schema is used by sqlc to generate Go code
 -- for database operations
@@ -36,15 +36,8 @@ EOL
 cat "${TEMP_SCHEMA}".tmp | grep -v "CREATE TABLE sqlite_" >>"$TEMP_SCHEMA"
 rm "${TEMP_SCHEMA}".tmp
 
-# Strip date lines from both files for comparison
-TEMP_NO_DATE=$(mktemp)
-SCHEMA_NO_DATE=$(mktemp)
-
-grep -v "Generated:" "$TEMP_SCHEMA" >"$TEMP_NO_DATE"
-grep -v "Generated:" $SCHEMA_FILE >"$SCHEMA_NO_DATE"
-
-# Compare files (ignoring the date line)
-if diff -q "$TEMP_NO_DATE" "$SCHEMA_NO_DATE" >/dev/null; then
+# Compare files directly since we no longer have date differences
+if diff -q "$TEMP_SCHEMA" "$SCHEMA_FILE" >/dev/null; then
   echo "✅ Schema is in sync with migrations"
   exit 0
 else
@@ -52,12 +45,12 @@ else
   echo "Please run 'task schema:generate' to update it"
   echo ""
   echo "Diff:"
-  diff -u "$SCHEMA_NO_DATE" "$TEMP_NO_DATE" || true
+  diff -u "$SCHEMA_FILE" "$TEMP_SCHEMA" || true
 
   # Clean up
-  rm -f "$TEMP_SCHEMA" "$TEMP_NO_DATE" "$SCHEMA_NO_DATE"
+  rm -f "$TEMP_SCHEMA"
   exit 1
 fi
 
 # Clean up
-rm -f "$TEMP_SCHEMA" "$TEMP_NO_DATE" "$SCHEMA_NO_DATE"
+rm -f "$TEMP_SCHEMA"
