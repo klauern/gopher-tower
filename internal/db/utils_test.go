@@ -15,14 +15,20 @@ func TestStringToNullString(t *testing.T) {
 		expected sql.NullString
 	}{
 		{
-			name:     "empty string",
-			input:    "",
-			expected: sql.NullString{String: "", Valid: false},
+			name:  "empty string",
+			input: "",
+			expected: sql.NullString{
+				String: "",
+				Valid:  false,
+			},
 		},
 		{
-			name:     "non-empty string",
-			input:    "test",
-			expected: sql.NullString{String: "test", Valid: true},
+			name:  "non-empty string",
+			input: "test",
+			expected: sql.NullString{
+				String: "test",
+				Valid:  true,
+			},
 		},
 	}
 
@@ -41,13 +47,19 @@ func TestNullStringToString(t *testing.T) {
 		expected string
 	}{
 		{
-			name:     "invalid null string",
-			input:    sql.NullString{String: "", Valid: false},
+			name: "invalid null string",
+			input: sql.NullString{
+				String: "",
+				Valid:  false,
+			},
 			expected: "",
 		},
 		{
-			name:     "valid null string",
-			input:    sql.NullString{String: "test", Valid: true},
+			name: "valid null string",
+			input: sql.NullString{
+				String: "test",
+				Valid:  true,
+			},
 			expected: "test",
 		},
 	}
@@ -69,14 +81,19 @@ func TestTimeToNullTime(t *testing.T) {
 		expected sql.NullTime
 	}{
 		{
-			name:     "nil time",
-			input:    nil,
-			expected: sql.NullTime{Valid: false},
+			name:  "nil time",
+			input: nil,
+			expected: sql.NullTime{
+				Valid: false,
+			},
 		},
 		{
-			name:     "valid time",
-			input:    &now,
-			expected: sql.NullTime{Time: now, Valid: true},
+			name:  "valid time",
+			input: &now,
+			expected: sql.NullTime{
+				Time:  now,
+				Valid: true,
+			},
 		},
 	}
 
@@ -100,13 +117,18 @@ func TestNullTimeToTimePtr(t *testing.T) {
 		expected *time.Time
 	}{
 		{
-			name:     "invalid null time",
-			input:    sql.NullTime{Valid: false},
+			name: "invalid null time",
+			input: sql.NullTime{
+				Valid: false,
+			},
 			expected: nil,
 		},
 		{
-			name:     "valid null time",
-			input:    sql.NullTime{Time: now, Valid: true},
+			name: "valid null time",
+			input: sql.NullTime{
+				Time:  now,
+				Valid: true,
+			},
 			expected: &now,
 		},
 	}
@@ -130,19 +152,28 @@ func TestInt64ToNullInt64(t *testing.T) {
 		expected sql.NullInt64
 	}{
 		{
-			name:     "zero value",
-			input:    0,
-			expected: sql.NullInt64{Int64: 0, Valid: true},
+			name:  "zero value",
+			input: 0,
+			expected: sql.NullInt64{
+				Int64: 0,
+				Valid: true,
+			},
 		},
 		{
-			name:     "positive value",
-			input:    42,
-			expected: sql.NullInt64{Int64: 42, Valid: true},
+			name:  "positive value",
+			input: 42,
+			expected: sql.NullInt64{
+				Int64: 42,
+				Valid: true,
+			},
 		},
 		{
-			name:     "negative value",
-			input:    -42,
-			expected: sql.NullInt64{Int64: -42, Valid: true},
+			name:  "negative value",
+			input: -42,
+			expected: sql.NullInt64{
+				Int64: -42,
+				Valid: true,
+			},
 		},
 	}
 
@@ -162,14 +193,20 @@ func TestNullInt64ToInt64(t *testing.T) {
 		expected     int64
 	}{
 		{
-			name:         "invalid null int64",
-			input:        sql.NullInt64{Valid: false},
+			name: "invalid null int64",
+			input: sql.NullInt64{
+				Int64: 0,
+				Valid: false,
+			},
 			defaultValue: -1,
 			expected:     -1,
 		},
 		{
-			name:         "valid null int64",
-			input:        sql.NullInt64{Int64: 42, Valid: true},
+			name: "valid null int64",
+			input: sql.NullInt64{
+				Int64: 42,
+				Valid: true,
+			},
 			defaultValue: -1,
 			expected:     42,
 		},

@@ -14,6 +14,8 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/klauern/gopher-tower/internal/api/jobs"
 	"github.com/klauern/gopher-tower/internal/db"
+	"github.com/klauern/gopher-tower/internal/db/migrate"
+	"github.com/klauern/gopher-tower/internal/migrations"
 	"github.com/klauern/gopher-tower/internal/static"
 	_ "modernc.org/sqlite"
 )
@@ -52,6 +54,11 @@ func main() {
 	// Test database connection
 	if err := dbConn.Ping(); err != nil {
 		log.Fatalf("Failed to ping database: %v", err)
+	}
+
+	// Run database migrations
+	if err := migrate.MigrateDB("gopher-tower.db", migrations.Files); err != nil {
+		log.Fatalf("Failed to run migrations: %v", err)
 	}
 
 	// Initialize database schema

@@ -1,6 +1,6 @@
 ---
 description: Project Layout
-globs: 
+globs:
 alwaysApply: false
 ---
 - This is an application that uses both Golang and NextJS 15
@@ -12,6 +12,10 @@ alwaysApply: false
   - Turbopack
   - Node 22 runtime for development
   - Vitest with React Testing Library for component testing
+- `internal/db/` contains database related code:
+  - `migrations/` directory stores SQL migration files
+  - `migrate/` package handles database migration logic
+  - SQLite database with golang-migrate for schema versioning
 - We use Taskfile.yml for common tasks.  New tasks will be added to it to document and outline what new common tasks we can use.
 - Use [CLAUDE.md](mdc:CLAUDE.md) to reference the project in more detail.
 - Testing:
