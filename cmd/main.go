@@ -8,10 +8,13 @@ import (
 	"io/fs"
 	"log"
 	"net/http"
+	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 	"github.com/klauern/gopher-tower/internal/api/jobs"
 	"github.com/klauern/gopher-tower/internal/db"
 	"github.com/klauern/gopher-tower/internal/db/migrate"
@@ -19,6 +22,29 @@ import (
 	"github.com/klauern/gopher-tower/internal/static"
 	_ "modernc.org/sqlite"
 )
+
+// spaFileSystem handles serving the static frontend, falling back to index.html
+type spaFileSystem struct {
+	root http.FileSystem
+}
+
+func (fs *spaFileSystem) Open(name string) (http.File, error) {
+	f, err := fs.root.Open(name)
+	// If the file doesn't exist (likely a client-side route), serve index.html
+	if os.IsNotExist(err) {
+		// Ensure we don't loop indefinitely if index.html is missing
+		if name == "index.html" {
+			return nil, err
+		}
+		indexFile, indexErr := fs.root.Open("index.html")
+		if indexErr != nil {
+			// If index.html itself is missing, return the original error
+			return nil, err
+		}
+		return indexFile, nil
+	}
+	return f, err
+}
 
 type Event struct {
 	Type    string      `json:"type"`
@@ -35,15 +61,6 @@ func initializeDatabase(dbConn *sql.DB) error {
 }
 
 func main() {
-	// Create a file system with the frontend directory as the root
-	fsys, err := fs.Sub(static.Files, "frontend")
-	if err != nil {
-		log.Fatalf("Failed to create sub filesystem: %v", err)
-	}
-
-	// Create a file server for static assets
-	fileServer := http.FileServer(http.FS(fsys))
-
 	// Initialize SQLite database
 	dbConn, err := sql.Open("sqlite", "gopher-tower.db")
 	if err != nil {
@@ -72,47 +89,59 @@ func main() {
 	// Initialize HTTP server and routes
 	router := chi.NewRouter()
 
+	// Add standard middleware
+	router.Use(middleware.RequestID)
+	router.Use(middleware.RealIP)
+	router.Use(middleware.Logger) // Keep or add logging middleware
+	router.Use(middleware.Recoverer)
+	router.Use(middleware.Timeout(60 * time.Second)) // Example timeout
+
 	// Initialize jobs service and handler
 	jobService := jobs.NewService(queries)
 	jobHandler := jobs.NewHandler(jobService)
 
-	// Mount API routes
-	apiRouter := chi.NewRouter()
-	// Add CORS middleware for API routes
-	apiRouter.Use(func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			w.Header().Set("Access-Control-Allow-Origin", "*")
-			w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
-			w.Header().Set("Access-Control-Allow-Headers", "*")
+	// Mount API routes under /api
+	router.Route("/api", func(r chi.Router) {
+		// Add CORS middleware specifically for API routes
+		r.Use(func(next http.Handler) http.Handler {
+			return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				w.Header().Set("Access-Control-Allow-Origin", "*") // Adjust in production if needed
+				w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+				w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization") // Add headers your frontend might send
 
-			if r.Method == "OPTIONS" {
-				w.WriteHeader(http.StatusOK)
-				return
-			}
+				if r.Method == "OPTIONS" {
+					w.WriteHeader(http.StatusOK)
+					return
+				}
 
-			next.ServeHTTP(w, r)
+				next.ServeHTTP(w, r)
+			})
 		})
-	})
-	jobHandler.RegisterRoutes(apiRouter)
 
-	// Handle SSE endpoint under /api
-	apiRouter.HandleFunc("/events", func(w http.ResponseWriter, r *http.Request) {
-		// Only allow GET requests for SSE
-		if r.Method != "GET" {
-			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-			return
-		}
-
-		handleSSE(w, r)
+		jobHandler.RegisterRoutes(r)
+		r.Get("/events", handleSSE) // Keep SSE handler under /api
 	})
 
-	router.Mount("/api", apiRouter)
 
-	// For everything else, use the file server
-	router.Handle("/*", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		log.Printf("Request for: %s", r.URL.Path)
-		fileServer.ServeHTTP(w, r)
-	}))
+	// --- Serve Static Frontend Files ---
+	// Determine the directory where the frontend build output lives
+	// This assumes the Go binary runs from the project root. Adjust if needed.
+	workDir, _ := os.Getwd()
+	staticPath := filepath.Join(workDir, "frontend", "out") // Path to Next.js static export output
+
+	// Check if the static directory exists
+	if _, err := os.Stat(staticPath); os.IsNotExist(err) {
+		log.Printf("Warning: Static file directory not found at %s. Frontend will not be served.", staticPath)
+		// Optionally, you could choose to log.Fatal here if the frontend is mandatory
+	} else {
+		log.Printf("Serving static files from %s", staticPath)
+		staticFilesDir := http.Dir(staticPath)
+		fileServer := http.FileServer(&spaFileSystem{root: staticFilesDir})
+
+		// Handle all other requests by serving static files or index.html
+		router.Handle("/*", http.StripPrefix("/", fileServer))
+	}
+	// --- End Static File Serving ---
 
 	port := 8080
 	server := &http.Server{

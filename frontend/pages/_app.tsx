@@ -1,3 +1,5 @@
+'use client';
+
 import { ThemeProvider } from "@/components/theme-provider";
 import type { AppProps } from 'next/app';
 import { Geist, Geist_Mono } from "next/font/google";
