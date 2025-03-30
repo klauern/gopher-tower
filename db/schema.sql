@@ -2,7 +2,7 @@
 -- AUTOMATICALLY GENERATED FROM MIGRATIONS
 -- DO NOT EDIT DIRECTLY
 --
--- Generated: Sat Mar 29 20:20:14 CDT 2025
+-- Generated from migration files
 --
 -- This schema is used by sqlc to generate Go code
 -- for database operations

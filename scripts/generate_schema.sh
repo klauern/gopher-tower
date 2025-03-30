@@ -12,13 +12,13 @@ MIGRATIONS_DIR="internal/db/migrations"
 # Output file
 OUTPUT_FILE="db/schema.sql"
 
-# Create a header for the schema file
+# Create a header for the schema file with a fixed date to avoid unnecessary changes
 cat >$OUTPUT_FILE <<EOL
 -- Database schema for Gopher Tower
 -- AUTOMATICALLY GENERATED FROM MIGRATIONS
 -- DO NOT EDIT DIRECTLY
 --
--- Generated: $(date)
+-- Generated from migration files
 --
 -- This schema is used by sqlc to generate Go code
 -- for database operations
