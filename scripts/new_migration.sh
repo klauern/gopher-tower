@@ -1,6 +1,13 @@
 #!/bin/bash
 set -e
 
+# Check if golang-migrate is installed
+if ! command -v migrate &>/dev/null; then
+  echo "Error: golang-migrate is not installed"
+  echo "Install it with: go install -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate@latest"
+  exit 1
+fi
+
 prompt_migration_name() {
   local name=""
   while [ -z "$name" ]; do
@@ -28,17 +35,18 @@ if [[ ! $MIGRATION_NAME =~ ^[a-z0-9_]+$ ]]; then
   exit 1
 fi
 
-TIMESTAMP=$(date +%Y%m%d%H%M%S)
-MIGRATION_FILE="internal/db/migrations/$(printf '%06d' "$TIMESTAMP")_${MIGRATION_NAME}"
-
-# Create migration files
+# Create migration using golang-migrate
 echo "Creating migration: $MIGRATION_NAME"
-touch "${MIGRATION_FILE}.up.sql"
-touch "${MIGRATION_FILE}.down.sql"
+migrate create -ext sql -dir internal/db/migrations -seq "$MIGRATION_NAME"
+
+# Find the newly created migration files
+MIGRATION_FILES=($(ls -t internal/db/migrations/*"${MIGRATION_NAME}".*.sql | head -n 2))
+UP_MIGRATION=${MIGRATION_FILES[0]}
+DOWN_MIGRATION=${MIGRATION_FILES[1]}
 
 echo "Created migration files:"
-echo "  ${MIGRATION_FILE}.up.sql"
-echo "  ${MIGRATION_FILE}.down.sql"
+echo "  $UP_MIGRATION"
+echo "  $DOWN_MIGRATION"
 
 # Prompt for migration content
 read -p "Would you like to edit the migration files now? [Y/n] " -n 1 -r
@@ -47,13 +55,13 @@ if [[ $REPLY =~ ^[Yy]$ ]] || [[ -z $REPLY ]]; then
   # Try to use the user's preferred editor
   EDITOR=${EDITOR:-$(which vim || which nano || which vi)}
   if [ -n "$EDITOR" ]; then
-    $EDITOR "${MIGRATION_FILE}.up.sql"
+    $EDITOR "$UP_MIGRATION"
     echo "Now edit the down migration..."
-    $EDITOR "${MIGRATION_FILE}.down.sql"
+    $EDITOR "$DOWN_MIGRATION"
   else
     echo "No text editor found. Please edit the files manually:"
-    echo "  ${MIGRATION_FILE}.up.sql"
-    echo "  ${MIGRATION_FILE}.down.sql"
+    echo "  $UP_MIGRATION"
+    echo "  $DOWN_MIGRATION"
   fi
 fi
 

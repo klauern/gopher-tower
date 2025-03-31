@@ -33,7 +33,7 @@ CREATE TABLE jobs (
   end_date TIMESTAMP,
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  owner_id TEXT,
+  owner_id TEXT, command TEXT, arguments TEXT, stdout TEXT, stderr TEXT,
   FOREIGN KEY (owner_id) REFERENCES users(id)
 );
 CREATE INDEX idx_jobs_status ON jobs(status);
@@ -104,3 +104,30 @@ CREATE TABLE activity_logs (
 );
 CREATE INDEX idx_activity_logs_entity ON activity_logs(entity_type, entity_id);
 CREATE INDEX idx_activity_logs_user_id ON activity_logs(user_id);
+CREATE TABLE environments (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE TABLE env_vars (
+    id SERIAL PRIMARY KEY,
+    environment_id INTEGER NOT NULL REFERENCES environments(id) ON DELETE CASCADE,
+    key VARCHAR(255) NOT NULL,
+    value TEXT,
+    is_sensitive BOOLEAN NOT NULL DEFAULT false,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(environment_id, key)
+);
+CREATE TABLE env_secrets (
+    id SERIAL PRIMARY KEY,
+    env_var_id INTEGER NOT NULL REFERENCES env_vars(id) ON DELETE CASCADE,
+    encrypted_value BYTEA NOT NULL,
+    iv BYTEA NOT NULL,  -- Initialization Vector for encryption
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT one_secret_per_var UNIQUE(env_var_id)
+);
+CREATE INDEX idx_env_vars_environment_id ON env_vars(environment_id);
+CREATE INDEX idx_env_secrets_env_var_id ON env_secrets(env_var_id);
