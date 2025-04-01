@@ -11,7 +11,7 @@ fi
 prompt_migration_name() {
   local name=""
   while [ -z "$name" ]; do
-    read -p "Enter migration name (e.g., add_users_table): " name
+    read -r -p "Enter migration name (e.g., add_users_table): " name
     # Remove spaces and special characters, convert to snake_case
     name=$(echo "$name" | tr '[:upper:]' '[:lower:]' | tr ' ' '_' | sed 's/[^a-z0-9_]//g')
     if [ -z "$name" ]; then
@@ -40,7 +40,7 @@ echo "Creating migration: $MIGRATION_NAME"
 migrate create -ext sql -dir internal/db/migrations -seq "$MIGRATION_NAME"
 
 # Find the newly created migration files
-MIGRATION_FILES=($(ls -t internal/db/migrations/*"${MIGRATION_NAME}".*.sql | head -n 2))
+mapfile -t MIGRATION_FILES < <(find internal/db/migrations -name "*${MIGRATION_NAME}.*.sql" -printf "%T@ %p\n" | sort -nr | head -n2 | cut -d' ' -f2-)
 UP_MIGRATION=${MIGRATION_FILES[0]}
 DOWN_MIGRATION=${MIGRATION_FILES[1]}
 

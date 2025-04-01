@@ -33,7 +33,7 @@ $(find ./internal/db/migrations -name "*.up.sql" | sort | xargs cat)
 EOL
 
 # Process the schema output to make it more readable
-cat "${TEMP_SCHEMA}".tmp | grep -v "CREATE TABLE sqlite_" >>"$TEMP_SCHEMA"
+grep -v "CREATE TABLE sqlite_" "${TEMP_SCHEMA}.tmp" >>"$TEMP_SCHEMA"
 rm "${TEMP_SCHEMA}".tmp
 
 # Compare files directly since we no longer have date differences
