@@ -65,3 +65,5 @@ next-env.d.ts
 internal/static/frontend
 /.task
 gopher*
+
+/.aider
