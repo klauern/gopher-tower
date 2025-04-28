@@ -140,12 +140,12 @@ func TestGetJob(t *testing.T) {
 	}{
 		{
 			name:  "job found",
-			jobID: "test-id",
+			jobID: "123e4567-e89b-12d3-a456-426614174000",
 			setupMock: func(ms *MockService) {
 				ms.EXPECT().
-					GetJob(gomock.Any(), "test-id").
+					GetJob(gomock.Any(), "123e4567-e89b-12d3-a456-426614174000").
 					Return(&JobResponse{
-						ID:          "test-id",
+						ID:          "123e4567-e89b-12d3-a456-426614174000",
 						Name:        "Test Job",
 						Description: "Test Description",
 						Status:      JobStatusPending,
@@ -155,10 +155,10 @@ func TestGetJob(t *testing.T) {
 		},
 		{
 			name:  "job not found",
-			jobID: "non-existent",
+			jobID: "123e4567-e89b-12d3-a456-426614174001",
 			setupMock: func(ms *MockService) {
 				ms.EXPECT().
-					GetJob(gomock.Any(), "non-existent").
+					GetJob(gomock.Any(), "123e4567-e89b-12d3-a456-426614174001").
 					Return(nil, ErrJobNotFound)
 			},
 			wantStatus: http.StatusNotFound,
@@ -274,7 +274,7 @@ func TestUpdateJob(t *testing.T) {
 	}{
 		{
 			name:  "successful update",
-			jobID: "test-id",
+			jobID: "123e4567-e89b-12d3-a456-426614174000",
 			req: JobRequest{
 				Name:        "Updated Job",
 				Description: "Updated Description",
@@ -282,9 +282,9 @@ func TestUpdateJob(t *testing.T) {
 			},
 			setupMock: func(ms *MockService) {
 				ms.EXPECT().
-					UpdateJob(gomock.Any(), "test-id", gomock.Any()).
+					UpdateJob(gomock.Any(), "123e4567-e89b-12d3-a456-426614174000", gomock.Any()).
 					Return(&JobResponse{
-						ID:          "test-id",
+						ID:          "123e4567-e89b-12d3-a456-426614174000",
 						Name:        "Updated Job",
 						Description: "Updated Description",
 						Status:      JobStatusActive,
@@ -294,14 +294,14 @@ func TestUpdateJob(t *testing.T) {
 		},
 		{
 			name:  "job not found",
-			jobID: "non-existent",
+			jobID: "123e4567-e89b-12d3-a456-426614174001",
 			req: JobRequest{
 				Name:   "Updated Job",
 				Status: JobStatusActive,
 			},
 			setupMock: func(ms *MockService) {
 				ms.EXPECT().
-					UpdateJob(gomock.Any(), "non-existent", gomock.Any()).
+					UpdateJob(gomock.Any(), "123e4567-e89b-12d3-a456-426614174001", gomock.Any()).
 					Return(nil, ErrJobNotFound)
 			},
 			wantStatus: http.StatusNotFound,
@@ -336,20 +336,20 @@ func TestDeleteJob(t *testing.T) {
 	}{
 		{
 			name:  "successful deletion",
-			jobID: "test-id",
+			jobID: "123e4567-e89b-12d3-a456-426614174000",
 			setupMock: func(ms *MockService) {
 				ms.EXPECT().
-					DeleteJob(gomock.Any(), "test-id").
+					DeleteJob(gomock.Any(), "123e4567-e89b-12d3-a456-426614174000").
 					Return(nil)
 			},
 			wantStatus: http.StatusNoContent,
 		},
 		{
 			name:  "job not found",
-			jobID: "non-existent",
+			jobID: "123e4567-e89b-12d3-a456-426614174001",
 			setupMock: func(ms *MockService) {
 				ms.EXPECT().
-					DeleteJob(gomock.Any(), "non-existent").
+					DeleteJob(gomock.Any(), "123e4567-e89b-12d3-a456-426614174001").
 					Return(ErrJobNotFound)
 			},
 			wantStatus: http.StatusNotFound,
