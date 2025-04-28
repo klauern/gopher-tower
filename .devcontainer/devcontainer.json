@@ -41,7 +41,14 @@
     "ghcr.io/devcontainers/features/github-cli:1": {},
     "ghcr.io/devcontainers/features/go:1": {
       "version": "latest"
-    }
+    },
+    "ghcr.io/devcontainers/features/node:1": {
+      "version": "lts",
+      "pnpmVersion": "latest"
+    },
+    "ghcr.io/devcontainers-extra/features/lefthook-asdf:1": {},
+    "ghcr.io/devcontainers-extra/features/go-task:1": {},
+    "ghcr.io/devcontainers-extra/features/direnv-asdf:2": {}
   },
   "forwardPorts": [3000, 8080],
   "postCreateCommand": "mkdir -p /root/.cursor-server/data/User/workspaceStorage && go install github.com/evilmartians/lefthook@latest && task deps",
