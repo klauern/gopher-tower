@@ -6,6 +6,7 @@ import (
 	"strconv"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/google/uuid"
 )
 
 // contextKey is a custom type for context keys to avoid collisions
@@ -72,6 +73,10 @@ func (h *Handler) GetJob(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Missing job ID", http.StatusBadRequest)
 		return
 	}
+	if _, err := uuid.Parse(id); err != nil {
+		http.Error(w, "Invalid job ID format", http.StatusBadRequest)
+		return
+	}
 
 	resp, err := h.service.GetJob(r.Context(), id)
 	if err != nil {
@@ -96,6 +101,10 @@ func (h *Handler) UpdateJob(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 	if id == "" {
 		http.Error(w, "Missing job ID", http.StatusBadRequest)
+		return
+	}
+	if _, err := uuid.Parse(id); err != nil {
+		http.Error(w, "Invalid job ID format", http.StatusBadRequest)
 		return
 	}
 
@@ -130,6 +139,10 @@ func (h *Handler) DeleteJob(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 	if id == "" {
 		http.Error(w, "Missing job ID", http.StatusBadRequest)
+		return
+	}
+	if _, err := uuid.Parse(id); err != nil {
+		http.Error(w, "Invalid job ID format", http.StatusBadRequest)
 		return
 	}
 
