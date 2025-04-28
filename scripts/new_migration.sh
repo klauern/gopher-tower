@@ -2,9 +2,9 @@
 set -e
 
 # Check if golang-migrate is installed
-if ! command -v migrate &>/dev/null; then
-  echo "Error: golang-migrate is not installed"
-  echo "Install it with: go install -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate@latest"
+if ! go tool migrate version &>/dev/null; then
+  echo "Error: golang-migrate is not installed as a Go tool (go tool migrate)"
+  echo "Install it with: go get -tool github.com/golang-migrate/migrate/v4/cmd/migrate"
   exit 1
 fi
 
@@ -37,7 +37,7 @@ fi
 
 # Create migration using golang-migrate
 echo "Creating migration: $MIGRATION_NAME"
-migrate create -ext sql -dir internal/db/migrations -seq "$MIGRATION_NAME"
+go tool migrate create -ext sql -dir internal/db/migrations -seq "$MIGRATION_NAME"
 
 # Find the newly created migration files
 mapfile -t MIGRATION_FILES < <(find internal/db/migrations -name "*${MIGRATION_NAME}.*.sql" -printf "%T@ %p\n" | sort -nr | head -n2 | cut -d' ' -f2-)
