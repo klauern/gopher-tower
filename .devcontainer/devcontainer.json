@@ -4,6 +4,12 @@
     "dockerfile": "Dockerfile",
     "context": ".."
   },
+  "containerEnv": {
+    "GH_TOKEN": "${localEnv:GITHUB_TOKEN}",
+    "EDITOR": "vim",
+    "GH_EDITOR": "vim",
+    "GIT_EDITOR": "vim"
+  },
   "customizations": {
     "vscode": {
       "extensions": [
@@ -52,8 +58,8 @@
     "ghcr.io/devcontainers-extra/features/fd:1": {}
   },
   "forwardPorts": [3000, 8080],
-  "postCreateCommand": "mkdir -p /root/.cursor-server/data/User/workspaceStorage && go install github.com/evilmartians/lefthook@latest && task deps",
-  "remoteUser": "root",
+  "postCreateCommand": "task deps",
+  "remoteUser": "vscode",
   "workspaceMount": "source=${localWorkspaceFolder},target=/workspaces/gopher-tower,type=bind,consistency=delegated",
   "mounts": [
     "source=${localEnv:HOME}/.gitconfig,target=/root/.gitconfig,type=bind,consistency=delegated"

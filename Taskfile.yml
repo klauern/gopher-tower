@@ -41,6 +41,7 @@ tasks:
 
   prepare:schema:
     desc: Handle database schema setup
+    run: once
     cmds:
       - mkdir -p internal/db/migrations
       - task: schema:generate
@@ -49,6 +50,7 @@ tasks:
 
   schema:generate:
     desc: Generate canonical schema.sql from migrations
+    run: once
     cmds:
       - ./scripts/generate_schema.sh
 
@@ -127,6 +129,7 @@ tasks:
   # Go Tasks
   go:deps:
     desc: Install Go dependencies
+    run: once
     cmds:
       - go mod download
       - go mod tidy
@@ -149,6 +152,7 @@ tasks:
   go:generate:
     desc: Generate Go code (mocks, etc.)
     deps: [go:deps]
+    run: once
     cmds:
       - go generate ./...
 
@@ -179,9 +183,9 @@ tasks:
   go:fmt:
     desc: Format Go code
     cmds:
-      - gofmt -s -w .
+      - gofmt -w .
       - go tool goimports -w .
-      - fd -e go | xargs go tool gofumpt -w
+      - go tool mvdan.cc/gofumpt -w .
 
   # Main workflow tasks
   build:
