@@ -48,7 +48,8 @@
     },
     "ghcr.io/devcontainers-extra/features/lefthook-asdf:1": {},
     "ghcr.io/devcontainers-extra/features/go-task:1": {},
-    "ghcr.io/devcontainers-extra/features/direnv-asdf:2": {}
+    "ghcr.io/devcontainers-extra/features/direnv-asdf:2": {},
+    "ghcr.io/devcontainers-extra/features/fd:1": {}
   },
   "forwardPorts": [3000, 8080],
   "postCreateCommand": "mkdir -p /root/.cursor-server/data/User/workspaceStorage && go install github.com/evilmartians/lefthook@latest && task deps",
