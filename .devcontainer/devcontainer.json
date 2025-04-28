@@ -62,6 +62,7 @@
   "remoteUser": "vscode",
   "workspaceMount": "source=${localWorkspaceFolder},target=/workspaces/gopher-tower,type=bind,consistency=delegated",
   "mounts": [
-    "source=${localEnv:HOME}/.gitconfig,target=/root/.gitconfig,type=bind,consistency=delegated"
+    "source=${localEnv:HOME}/.gitconfig,target=/root/.gitconfig,type=bind,consistency=delegated",
+    "source=${localEnv:HOME}/.local/share/atuin,target=/home/vscode/.local/share/atuin,type=bind,consistency=delegated"
   ]
 }

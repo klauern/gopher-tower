@@ -7,6 +7,8 @@ SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 COPY scripts/install_git_delta.sh /tmp/install_git_delta.sh
 RUN /tmp/install_git_delta.sh
 
+RUN curl --proto '=https' --tlsv1.2 -LsSf https://setup.atuin.sh | sh
+
 # Install common development tools
 # hadolint ignore=DL3008
 RUN apt-get update && apt-get install -y --no-install-recommends \
