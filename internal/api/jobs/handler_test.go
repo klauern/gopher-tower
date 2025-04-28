@@ -183,6 +183,31 @@ func TestGetJob(t *testing.T) {
 	}
 }
 
+func TestGetJob_InvalidAndMissingID(t *testing.T) {
+	tc := setupTest(t)
+	defer tc.ctrl.Finish()
+
+	cases := []struct {
+		name       string
+		url        string
+		wantStatus int
+	}{
+		{"missing id", "/jobs/", http.StatusNotFound},
+		{"invalid id", "/jobs/not-a-uuid", http.StatusBadRequest},
+	}
+
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			req := httptest.NewRequest(http.MethodGet, c.url, nil)
+			w := httptest.NewRecorder()
+			tc.router.ServeHTTP(w, req)
+			if w.Code != c.wantStatus {
+				t.Errorf("GetJob(%s) status = %v, want %v", c.name, w.Code, c.wantStatus)
+			}
+		})
+	}
+}
+
 func TestListJobs(t *testing.T) {
 	tests := []struct {
 		name       string
@@ -264,6 +289,35 @@ func TestListJobs(t *testing.T) {
 	}
 }
 
+func TestListJobs_InvalidPageSizeAndStatus(t *testing.T) {
+	tc := setupTest(t)
+	defer tc.ctrl.Finish()
+
+	cases := []struct {
+		name       string
+		query      string
+		setupMock  func(*MockService)
+		wantStatus int
+	}{
+		{"invalid page_size", "?page=1&page_size=notanint", func(ms *MockService) {}, http.StatusBadRequest},
+		{"invalid status", "?page=1&page_size=10&status=notastatus", func(ms *MockService) {
+			ms.EXPECT().ListJobs(gomock.Any(), gomock.Any()).Return(&JobListResponse{Jobs: []JobResponse{}, TotalCount: 0, Page: 1, PageSize: 10}, nil)
+		}, http.StatusOK},
+	}
+
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			c.setupMock(tc.mockService)
+			req := httptest.NewRequest(http.MethodGet, "/jobs"+c.query, nil)
+			w := httptest.NewRecorder()
+			tc.router.ServeHTTP(w, req)
+			if w.Code != c.wantStatus {
+				t.Errorf("ListJobs(%s) status = %v, want %v", c.name, w.Code, c.wantStatus)
+			}
+		})
+	}
+}
+
 func TestUpdateJob(t *testing.T) {
 	tests := []struct {
 		name       string
@@ -327,6 +381,32 @@ func TestUpdateJob(t *testing.T) {
 	}
 }
 
+func TestUpdateJob_InvalidAndMissingID(t *testing.T) {
+	tc := setupTest(t)
+	defer tc.ctrl.Finish()
+
+	body, _ := json.Marshal(JobRequest{Name: "n", Status: JobStatusActive})
+	cases := []struct {
+		name       string
+		url        string
+		wantStatus int
+	}{
+		{"missing id", "/jobs/", http.StatusNotFound},
+		{"invalid id", "/jobs/not-a-uuid", http.StatusBadRequest},
+	}
+
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			req := httptest.NewRequest(http.MethodPut, c.url, bytes.NewReader(body))
+			w := httptest.NewRecorder()
+			tc.router.ServeHTTP(w, req)
+			if w.Code != c.wantStatus {
+				t.Errorf("UpdateJob(%s) status = %v, want %v", c.name, w.Code, c.wantStatus)
+			}
+		})
+	}
+}
+
 func TestDeleteJob(t *testing.T) {
 	tests := []struct {
 		name       string
@@ -369,6 +449,31 @@ func TestDeleteJob(t *testing.T) {
 
 			if w.Code != tt.wantStatus {
 				t.Errorf("DeleteJob() status = %v, want %v", w.Code, tt.wantStatus)
+			}
+		})
+	}
+}
+
+func TestDeleteJob_InvalidAndMissingID(t *testing.T) {
+	tc := setupTest(t)
+	defer tc.ctrl.Finish()
+
+	cases := []struct {
+		name       string
+		url        string
+		wantStatus int
+	}{
+		{"missing id", "/jobs/", http.StatusNotFound},
+		{"invalid id", "/jobs/not-a-uuid", http.StatusBadRequest},
+	}
+
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			req := httptest.NewRequest(http.MethodDelete, c.url, nil)
+			w := httptest.NewRecorder()
+			tc.router.ServeHTTP(w, req)
+			if w.Code != c.wantStatus {
+				t.Errorf("DeleteJob(%s) status = %v, want %v", c.name, w.Code, c.wantStatus)
 			}
 		})
 	}

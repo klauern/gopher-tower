@@ -25,3 +25,13 @@ pre-commit:
       files: git ls-files -m
       glob: "*.{js,ts,jsx,tsx}"
       run: npm test {files}
+  scripts:
+    no-commit-to-main:
+      runner: bash
+      commands:
+        check-branch: |
+          branch="$(git rev-parse --abbrev-ref HEAD)"
+          if [ "$branch" = "main" ]; then
+            echo "✋ You are trying to commit to 'main'. Switch branches first."
+            exit 1
+          fi
