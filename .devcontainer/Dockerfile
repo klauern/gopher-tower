@@ -12,6 +12,8 @@ SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
 # Install task
 # RUN sh -c "$(curl --location https://taskfile.dev/install.sh)" -- -d -b /usr/local/bin
+COPY scripts/install_git_delta.sh /tmp/install_git_delta.sh
+RUN /tmp/install_git_delta.sh
 
 # Install common development tools
 # hadolint ignore=DL3008
