@@ -12,7 +12,7 @@ tool (
 )
 
 require (
-	github.com/go-chi/chi/v5 v5.2.1
+	github.com/go-chi/chi/v5 v5.2.2
 	github.com/golang-migrate/migrate/v4 v4.18.3
 	github.com/google/tink/go v1.7.0
 	github.com/google/uuid v1.6.0
