@@ -28,7 +28,7 @@ describe('EventStream', () => {
   beforeEach(() => {
     vi.useFakeTimers();
     // Mock the global EventSource
-    global.EventSource = vi.fn().mockImplementation((url: string, options?: { withCredentials: boolean }) => {
+    global.EventSource = vi.fn().mockImplementation(function (url: string, options?: { withCredentials: boolean }) {
       mockEventSource = new MockEventSource(url, options);
       return mockEventSource;
     }) as unknown as typeof EventSource;
